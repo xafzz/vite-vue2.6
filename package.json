@@ -1,0 +1,16 @@
+{
+  "name": "practice-vite-vue2.6",
+  "version": "1.0.0",
+  "description": "练习vue",
+  "main": "index.js",
+  "repository": "https://github.com/xafzz/practice-vite-vue2.6.git",
+  "author": "xuanfu <15553626266@163.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "devDependencies": {
+    "chokidar": "^3.4.3",
+    "koa": "^2.13.0"
+  }
+}
