@@ -22,7 +22,7 @@ function writeImport(content){
 
 app.use(async (ctx,next)=>{
     let { url } =ctx
-    // console.log('url->',url)
+    console.log('url->',url)
     //根目录
     if( url === '/' ){
         let content = fs.readFileSync('./index.html','utf-8')
@@ -56,7 +56,11 @@ server.listen(port,()=>{
 
 
 //监听文件变化
-const watcher = chokidar.watch(['./index.html','./src/main.js'])
+// const watcher = chokidar.watch(['./index.html','./src/main.js'])
+const watcher = chokidar.watch('.',{
+    ignored:['node_modules','.idea','.git','yarn-error.log','yarn.lock','.gitignore','README.md','package.json'],
+    persistent: true
+})
 let ioSocket;
 watcher.on('ready',()=>{
     //初始化 建立链接
@@ -72,12 +76,14 @@ watcher.on('ready',()=>{
 })
 //监听change事件
 watcher.on('change',(path)=>{
-    console.log('update->',path)
+    console.log('change->',path)
     //todo 可以通过获取文件内容对页面进行局部更新，现在是直接刷新页面
     ioSocket.emit('pageChange',{
         path:path,
         server:true,
         client:false
     })
+}).on('add',(path)=>{
+    console.log('add->',path)
 })
 
