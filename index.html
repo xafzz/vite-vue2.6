@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="module" src="./src/main.js"></script>
+</head>
+<body>
+    <div id="app">
+        ddd
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io('ws://localhost:9000');
+        socket.on('pageChange', function (data) {
+            if(data && data.server){
+                window.location.reload()
+                //向服务器发送通知 客户端处理了相应
+                socket.emit('client', {
+                    server:false,
+                    client:true
+                });
+            }
+        });
+    </script>
+</body>
+</html>
