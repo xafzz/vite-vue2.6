@@ -2,6 +2,7 @@
  * Observer类会通过递归的方式把一个对象的所有属性都转化成可观测对象
  */
 import dom from './dom.js'
+import Dep1 from './dep.js'
 // 源码：src/core/observer/index.js
 export default class Observer
 {
@@ -31,12 +32,12 @@ export default class Observer
 
         }else{
             //obj
-            this.walk()
+            this.walk(obj)
         }
     }
     //object 处理方法
-    walk(){
-        let keys = Object.keys(this.obj)
+    walk(obj){
+        let keys = Object.keys(obj)
         // console.time()
         // keys.forEach(val=>{
         //     console.log('forEach->',val)
@@ -50,10 +51,57 @@ export default class Observer
         // console.time()
         for(let i=0;i<keys.length;i++){
             // console.log('for->',keys[i])
-            this.defineReactive(this.obj,keys[i])
+            this.defineReactive(obj,keys[i])
         }
         // console.timeEnd() // default: 0.18115234375 ms
         // console.log(keys)
+    }
+
+    /**
+     * 使一个对象转化成可观测对象
+     * @param { Object } obj 对象
+     * @param { String } key 对象的key
+     * @param { Any } val 对象的某个key的值
+     */
+    defineReactive(obj,key,val){
+        //arguments 是一个对应于传递给函数的参数的类数组对象。
+        //文档地址：https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/arguments
+        // console.log(arguments)
+        // 如果只传了obj和key，那么val = obj[key]
+        if( arguments.length === 2 ){
+            val = obj[key]
+        }
+        //如果是多层嵌套
+        if( typeof val === 'object' ){
+            new Observer(val)
+        }
+        //实例化一个依赖管理器 生成一个依赖管理数组dep
+        const dep = new Dep1()
+        Object.defineProperty(obj,key,{
+            enumerable:true,
+            configurable:true,
+            get(){
+                //访问的时候
+                //收集依赖
+                // console.log(`get：${key}属性被读取了,${val}`);
+                dep.depend()
+                return val
+            },
+            set(newVal){
+                // console.log(`set：${key}属性被修改了，newVal：${newVal}`);
+
+                if( val === newVal ){
+                    return
+                }
+                //将操作html放到这儿 虽然耗性能了点 但是实现了 视图更新
+                //如果同时更改多个字段值 更改一次 渲染一次
+                //都处理以后 集中更新一次就好了
+                dom(key,newVal)
+                val = newVal
+                //通知依赖更新
+                dep.notify()
+            }
+        })
     }
 
     //
@@ -108,44 +156,6 @@ export default class Observer
         //)方法返回一个布尔值，该布尔值指示对象是否具有指定的属性作为其自身的属性（而不是继承它）
         let hasOwnProperty = Object.prototype.hasOwnProperty
         return hasOwnProperty.call(obj, key)
-    }
-    /**
-     * 使一个对象转化成可观测对象
-     * @param { Object } obj 对象
-     * @param { String } key 对象的key
-     * @param { Any } val 对象的某个key的值
-     */
-    defineReactive(obj,key,val){
-        //arguments 是一个对应于传递给函数的参数的类数组对象。
-        //文档地址：https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/arguments
-        // console.log(arguments)
-        // 如果只传了obj和key，那么val = obj[key]
-        if( arguments.length === 2 ){
-            val = obj[key]
-        }
-        //如果是多层嵌套
-        if( typeof val === 'object' ){
-            new Observer(val)
-        }
-        Object.defineProperty(obj,key,{
-            enumerable:true,
-            configurable:true,
-            get(){
-                console.log(`get：${key}属性被读取了`);
-                return val
-            },
-            set(newVal){
-                if( val === newVal ){
-                    return
-                }
-                console.log(`set：${key}属性被修改了，newVal：${newVal}`);
-                //将操作html放到这儿 虽然耗性能了点 但是实现了 视图更新
-                //如果同时更改多个字段值 更改一次 渲染一次
-                //都处理以后 集中更新一次就好了
-                dom(key,newVal)
-                val = newVal
-            }
-        })
     }
 
     //源码 /src/core/util/lang.js
