@@ -1,14 +1,12 @@
 /**
  * Observer类会通过递归的方式把一个对象的所有属性都转化成可观测对象
  */
-import dom from './dom.js'
-import Dep1 from './dep.js'
+import Dep from './dep.js'
 // 源码：src/core/observer/index.js
 export default class Observer
 {
     constructor(obj) {
         this.obj = obj
-
         // 给value新增一个__ob__属性，值为该value的Observer实例
         // 相当于为value打上标记，表示它已经被转化成响应式了，避免重复操作
         this.def(obj,'__ob__',this)
@@ -76,19 +74,19 @@ export default class Observer
             new Observer(val)
         }
         //实例化一个依赖管理器 生成一个依赖管理数组dep
-        const dep = new Dep1()
+        const dep = new Dep()
         Object.defineProperty(obj,key,{
             enumerable:true,
             configurable:true,
             get(){
                 //访问的时候
                 //收集依赖
-                // console.log(`get：${key}属性被读取了,${val}`);
+                console.log(`get：${key}属性被读取了,${val}`);
                 dep.depend()
                 return val
             },
             set(newVal){
-                // console.log(`set：${key}属性被修改了，newVal：${newVal}`);
+                console.log(`set：${key}属性被修改了，newVal：${newVal}`);
 
                 if( val === newVal ){
                     return
@@ -96,7 +94,6 @@ export default class Observer
                 //将操作html放到这儿 虽然耗性能了点 但是实现了 视图更新
                 //如果同时更改多个字段值 更改一次 渲染一次
                 //都处理以后 集中更新一次就好了
-                dom(key,newVal)
                 val = newVal
                 //通知依赖更新
                 dep.notify()
