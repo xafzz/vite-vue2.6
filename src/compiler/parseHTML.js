@@ -79,7 +79,6 @@ export default function parseHTML(html, options) {
                         //4是因为 <!-- 4个字符
                         //3是因为 --> 3个字符
                         //index 是0
-
                         options.comment(html.substring(4,commentEnd),index,index+commentEnd+3)
                         advance( commentEnd +3 )
                         //经过这个处理 将注释部分 直接 跳过了
@@ -113,14 +112,6 @@ export default function parseHTML(html, options) {
 
                 //开始标签
                 // Start tag:
-                // var startTagMatch = parseStartTag();
-                // if (startTagMatch) {
-                //     handleStartTag(startTagMatch);
-                //     if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
-                //         advance(1);
-                //     }
-                //     continue
-                // }
                 let startTagMatch = parseStartTag()
                 /**
                      attrs: [Array(6)]
@@ -130,6 +121,7 @@ export default function parseHTML(html, options) {
                      unarySlash: ""
                 */
                 if( startTagMatch ){
+                    //从这跳到钩子函数 start 处理标签
                     handleStartTag(startTagMatch)
                     //pre,textarea /n
                     if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
