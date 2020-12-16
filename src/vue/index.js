@@ -1,5 +1,5 @@
 import Observer from "../observer/index.js";
-import {compileToFunctions} from "../compiler/index.js";
+import {compileToFunctions,compile} from "../compiler/index.js";
 
 const Vue = function(options){
 
@@ -26,8 +26,9 @@ Vue.prototype.$mount = function(el){
         console.warn('不能是<body>或者<html>标签')
         return this
     }
-
-    compileToFunctions(this._template)
+    //这2个都可以生成 好像没啥大的却别 后续 待考证
+    // compile(this._template,{})
+    compileToFunctions(this._template,{})
 }
 
 export default Vue

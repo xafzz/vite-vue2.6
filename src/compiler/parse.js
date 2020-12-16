@@ -278,7 +278,6 @@ export default function parse(template,options){
                 // 从前面过来的
                 stack.push(currentParent)
             }else{
-                console.log(11,element)
                 closeElement(element)
             }
 

@@ -87,7 +87,7 @@ export default function parseHTML(html, options) {
                         continue
                     }
                 }
-                /*条件渲染
+                /*条件注释
                     https://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
                     <![if IE 10]>
                     <div>IE 10</div>
@@ -187,7 +187,6 @@ export default function parseHTML(html, options) {
         }else{
             console.warn('有 script textarea style 元素')
         }
-        // console.log(index,last)
 
         if( html === last ){
             options.chars && options.chars(html)
@@ -196,18 +195,10 @@ export default function parseHTML(html, options) {
             }
             break
         }
-        // // advance(index)
-        // let nextIndex = index + 1
-        //
-        //
-        // // console.log(nextIndex,'截取的',html.substring(index,1))
-        // // console.log('未截取的',html.substring(index))
-        // // console.log(html)
-        // html = html.substring(nextIndex)
     }
 
     //清除剩余标签
-    // parseEndTag()
+    parseEndTag()
 
     function advance(n){
         index += n
