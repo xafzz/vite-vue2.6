@@ -26,7 +26,6 @@ function createCompileToFunctionFn(compile){
     }
 }
 
-
 //吧整个函数当参数传进来 这是 函数 funciton baseCompile
 function createCompilerCreator(baseCompile){
     // console.log(1)
@@ -56,10 +55,11 @@ function createCompilerCreator(baseCompile){
 //js 柯里化 逐步传参  参数复用 提前确认  延迟确认 bind
 const createCompiler = createCompilerCreator(function baseCompile(template,options){
     // console.log(6)
-    // console.log('处理的template字符串-->',template)
+    console.log('处理的template字符串-->',template)
     //生成ast 上面的 可以不用 直接用这个
+    //https://astexplorer.net/
     const ast = parse(template.trim(),options)
-    // console.log('生成的ast--->',ast)
+    console.log('生成的ast--->',ast)
     // console.log(111)
     // return {
     //     ast:ast
@@ -69,7 +69,6 @@ const createCompiler = createCompilerCreator(function baseCompile(template,optio
 //搞成空的吧
 let baseOptions = {
 }
-
 //
 const ref = createCompiler(baseOptions)
 const compile = ref.compile

@@ -95,3 +95,5 @@ function wrapFilter (exp, filter) {
     return ("_f(\"" + name + "\")(" + exp + (args !== ')' ? ',' + args : args))
   }
 }
+
+export default parseFilters

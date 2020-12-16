@@ -1,5 +1,5 @@
 
-
+import parseFilters from './filter-parser.js'
 
 // note: this only removes the attr from the Array (attrsList) so that it
 // doesn't get processed by processAttrs.
@@ -31,8 +31,10 @@ function getAndRemoveAttr(el,name,removeFromMap){
 function getBindingAttr(el,name,getStatic){
     let dynamicValue = getAndRemoveAttr(el,':'+name) || getAndRemoveAttr(el,'v-bind:'+name)
     //存在 :key="xxx"  dynamicValue 为 xxx
+    //存在 v-bind:key="xxx"  dynamicValue 为 xxx
     if( dynamicValue != null ){
-        console.log(dynamicValue,222)
+        //todo 直接复制过来了
+        return parseFilters(dynamicValue)
     }else if( getStatic !== false){
         //一种情况  key="1"
         let staticValue = getAndRemoveAttr(el,name)
@@ -43,7 +45,38 @@ function getBindingAttr(el,name,getStatic){
 }
 
 
+function getRawBindingAttr (el, name) {
+    return el.rawAttrsMap[':' + name] ||
+        el.rawAttrsMap['v-bind:' + name] ||
+        el.rawAttrsMap[name]
+}
+
+function addAttr(el,name,value,range,dynamic){
+    let attrs = dynamic
+        ? ( el.dynamicAttrs || ( el.dynamicAttrs = [] ) )
+        : ( el.attrs || (el.attrs = []) )
+    attrs.push(rangeSetItem(
+        {name,value,dynamic},
+        range
+        ))
+    el.pain = false
+}
+
+function rangeSetItem(item,range){
+    if( range ){
+        if( range.start !=null ){
+            item.start = range.start
+        }
+        if( range.end != null ){
+            item.end = range.end
+        }
+    }
+    return item
+}
+
 export {
     getAndRemoveAttr,
-    getBindingAttr
+    getBindingAttr,
+    getRawBindingAttr,
+    addAttr
 }

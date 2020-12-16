@@ -61,6 +61,7 @@ export default function parseHTML(html, options) {
     // 截取 html 模版字符串，并根据截取的字符串类型，触发相应钩子函数
     while (html){
         last = html
+        //处理非 script textarea style 元素
         if (!lastTag || !isPlainTextElement(lastTag)){
             //第一个是 <  注释 条件注释 开始标签 结束标签
             //设计的太漂亮了 根据 < 位置 将注释的搞掉 其他的都是标签
@@ -86,14 +87,15 @@ export default function parseHTML(html, options) {
                         continue
                     }
                 }
-                //条件渲染
-                // https://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
-                //<![if IE 10]>
-                //<div>IE 10</div>
-                //<![endif]>
-                // <!--[if gte IE 8]>
-                //<div>1111</div>
-                //<![endif]-->   都没有匹配出来
+                /*条件渲染
+                    https://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
+                    <![if IE 10]>
+                    <div>IE 10</div>
+                    <![endif]>
+                    <!--[if gte IE 8]>
+                    <div>1111</div>
+                    <![endif]-->   都没有匹配出来
+                 */
                 if( conditionalComment.test(html) ){
                     let conditionalEnd = html.indexOf(']>')
 
@@ -110,16 +112,28 @@ export default function parseHTML(html, options) {
                     continue
                 }
 
+                //结束标签 先走结束  哈哈 终于回来了
+                //todo 这块可以回来 重写一边 或者 整个while 重写一遍
+                let endTagMatch = html.match( endTag )
+                if (endTagMatch){
+                    let curIndex = index
+                    //最后写的结束标签 这个地方还是有必要重新来看下 #todo 一下子通了
+                    //也好像有点明白为什么 要先写 结束标签了
+                    advance(endTagMatch[0].length)
+                    parseEndTag(endTagMatch[1],curIndex,index)
+                    continue
+                }
+
                 //开始标签
                 // Start tag:
-                let startTagMatch = parseStartTag()
                 /**
-                     attrs: [Array(6)]
-                     end: 18
-                     start: 0
-                     tagName: "div"
-                     unarySlash: ""
-                */
+                 attrs: [Array(6)]
+                 end: 18
+                 start: 0
+                 tagName: "div"
+                 unarySlash: ""
+                 */
+                let startTagMatch = parseStartTag()
                 if( startTagMatch ){
                     //从这跳到钩子函数 start 处理标签
                     handleStartTag(startTagMatch)
@@ -130,12 +144,8 @@ export default function parseHTML(html, options) {
                     continue
                 }
 
-
-                //结束标签
-
-                console.log('还没有跳出去->' + index++,startTagMatch)
             }
-            /*//处理内容？
+            //处理内容？
             let text = (void 0) ,rest = (void 0), next = (void 0)
             // 判断 '<' 首次出现的位置，如果大于等于0，截取这段，赋值给text, 并删除这段字符串
             // 这里有可能是空文本，如这种 ' '情况， 他将会在chars里面处理
@@ -164,6 +174,7 @@ export default function parseHTML(html, options) {
             if( textEnd < 0 ){
                 text = html
             }
+
             // 截取
             if( text ){
                 advance(text.length)
@@ -172,20 +183,31 @@ export default function parseHTML(html, options) {
             //调用 chars 钩子 处理文本标签
             if(options.chars && text){
                 options.chars(text,index - text.length,index)
-            }*/
+            }
         }else{
-            console.log(2,2,html)
+            console.warn('有 script textarea style 元素')
         }
+        // console.log(index,last)
 
-        // advance(index)
-        let nextIndex = index + 1
-
-
-        // console.log(nextIndex,'截取的',html.substring(index,1))
-        // console.log('未截取的',html.substring(index))
-        // console.log(html)
-        html = html.substring(nextIndex)
+        if( html === last ){
+            options.chars && options.chars(html)
+            if( !stack.length ){
+                console.warn(`Mal-formatted tag at end of template:${html}`)
+            }
+            break
+        }
+        // // advance(index)
+        // let nextIndex = index + 1
+        //
+        //
+        // // console.log(nextIndex,'截取的',html.substring(index,1))
+        // // console.log('未截取的',html.substring(index))
+        // // console.log(html)
+        // html = html.substring(nextIndex)
     }
+
+    //清除剩余标签
+    // parseEndTag()
 
     function advance(n){
         index += n
@@ -291,6 +313,63 @@ export default function parseHTML(html, options) {
         }
         if( options.start ){
             options.start(tagName,attrs,unary,match.start,match.end)
+        }
+    }
+
+    //清除标签的时候 又走到了 这儿
+    //结束标签的时候
+    function parseEndTag(tagName,start,end){
+        let pos,lowerCasedTagName
+        //清除标签的时候 又走到
+        if( start == null ){
+            start = index
+        }
+        if( end == null ){
+            end = index
+        }
+        //查找最近打开相同类型的标记
+        if( tagName ){
+            //转小写
+            lowerCasedTagName = tagName.toLowerCase()
+            //stack 所有标签的集合
+            for( pos = stack.length -1;pos >= 0;pos-- ){
+                if( stack[pos].lowerCasedTag === lowerCasedTagName ){
+                    break
+                }
+            }
+        } else {
+            //没有提供标签名 清除
+            pos = 0
+        }
+
+        if( pos >= 0 ){
+            for (let i = stack.length-1;i>= pos ;i--){
+                if( i > pos || !tagName ){
+                    //没有匹配到结束标签
+                    console.warn(`tag <${stack[i].tag}> has no matching end tag.`)
+                }
+                //匹配结束标签 重走 end 钩子函数
+                if( options.end ){
+                    options.end( stack[i].tag, start, end)
+                }
+            }
+            //从堆栈中移除打开的元素 要不一直报 上面的 warn  console.warn(`tag <${stack[i].tag}> has no matching end tag.`)
+            stack.length = pos
+            lastTag = pos && stack[pos - 1].tag
+        }else if( lowerCasedTagName === 'br' ){
+            //存在br标签的时候
+            if( options.start ){
+                options.start(tagName,[],true,start,end)
+            }
+        }else if( lowerCasedTagName === 'p' ){
+            //开始标签
+            if( options.start ){
+                options.start(tagName,[],true,start,end)
+            }
+            //结束标签
+            if( options.end ){
+                options.end(tagName,start,end)
+            }
         }
     }
 }

@@ -3,10 +3,25 @@ import { no }  from '../shared/util.js'
 import parseHTML from './parseHTML.js'
 import {
     getAndRemoveAttr,
-    getBindingAttr
+    getBindingAttr,
+    getRawBindingAttr,
+    addAttr
 } from "./helpers.js";
+import parseFilters from "./filter-parser.js";
 //IE 的暂时忽略
 
+//冻结的值 热然可以将变量的引用替换掉
+//冻结数据 纯展示大数据 都可以使用 Object.freeze 提高性能
+const emptyObject = Object.freeze({})
+//vue 标签属性 v- @ #
+const onRE = /^@|^v-on:/;
+const dirRE = /^v-|^@|^:|^#/;
+const bindRE = /^:|^\.|^v-bind:/;
+const argRE = /:(.*)$/;
+
+const dynamicArgRE = /^\[.*\]$/;
+//v-bind.a
+const modifierRE = /\.[^.\]]+(?=[^\]]*$)/g;
 const invalidAttributeRE = /[\s"'<>\/=]/;
 //正则 in/of for循环体
 const forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/
@@ -14,22 +29,67 @@ const forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/
 const forIteratorRE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/;
 //正则括号 ()
 const stripParensRE = /^\(|\)$/g;
+//双花括号
+const  defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g;
+const regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g;
+
+
+const buildRegex = cached((delimiters)=>{
+    let open = delimiters[0].replace(regexEscapeRE,'\\$&')
+    let close = delimiters[1].replace(regexEscapeRE,'\\$&')
+    return new RegExp(open + '((?:.|\\n)+?)' + close, 'g')
+})
+/**
+ * Camelize a hyphen-delimited string.
+ */
+const camelizeRE = /-(\w)/g;
+const camelize = cached(function (str) {
+    return str.replace(camelizeRE, function (_, c) { return c ? c.toUpperCase() : ''; })
+});
+let decoder
+const he = {
+    decode : (html)=>{
+        decoder = decoder || document.createElement('div')
+        decoder.innerHTML = html
+        return decoder.textContent
+    }
+}
+
+const decodeHTMLCached = cached(he.decode)
+/**
+ * Create a cached version of a pure function.
+ */
+function cached (fn) {
+    let cache = Object.create(null);
+    return (function cachedFn (str) {
+        let hit = cache[str];
+        return hit || (cache[str] = fn(str))
+    })
+}
+
+let transforms,delimiters,platformMustUseProp,postTransforms
 //html 转 ast
 export default function parse(template,options){
     //options 是空的
 
-
+    //todo pluckModuleFunction
     let preTransforms = pluckModuleFunction(options.modules, 'preTransformNode');
     let platformGetTagNamespace = options.getTagNamespace || no
     let platformIsPreTag = options.isPreTag || no
+    let transforms = pluckModuleFunction(options.modules, 'transformNode')
+    let postTransforms = pluckModuleFunction(options.modules, 'postTransformNode');
+    let preserveWhitespace = options.preserveWhitespace !== false
+    let platformMustUseProp = options.mustUseProp || no
     // 判断 v-pre 指令
     let inVPre = false
     // todo 不知道干啥
     let inPre = false
+    let whitespaceOption = options.whitespace
+    let delimiters = options.delimiters
     // 从前面过来的
     // console.log(7)
     // 存放没有闭合的标签元素基本信息  当找到闭合标签后清除存在于stack里面的元素
-    const stack = []
+    let stack = []
     // 解析后的最终数据 应用了引用类型的特性 使root像滚雪球一样保存标签的所有信息
     let root;
     // 需要处理的元素父级元素
@@ -38,12 +98,54 @@ export default function parse(template,options){
     // todo 是指的根元素单闭合吗
     //处理单闭合标签
     function closeElement(el){
+        //一进来先删除一遍
         trimEndingWhitespace(el)
         if( !inVPre && !el.processed ){
-            console.log('单闭合标签',el)
+            //经过 processElement 将 attrsList 中的 key 挂载到 el 中 通过el.key
+            //这个方法NB啊 将各个属性都
             el = processElement(el,options)
         }
-        console.log(el,990)
+        if( !stack.length && el !== root ){
+            //todo 打印的时候 在补上
+            console.error(`没有走到这，判断条件是 !stack.length && el !== root`)
+        }
+        //终于
+        if( currentParent && !el.forbidden ){
+            //template 包含  else
+            if( el.elseif || el.else ){
+                processIfConditions(el,currentParent)
+            } else {
+                // scoped slot
+                // keep it in the children list so that v-else(-if) conditions can
+                // find it as the prev node.
+                if( el.slotScope ){
+                    let name = el.slotTarget || '"default"'
+                    ;(currentParent.scopedSlots || ( currentParent.scopedSlots = {} ))[name] = el
+                }
+                //终于有了 parent 了
+                currentParent.children.push(el)
+                el.parent = currentParent
+            }
+        }
+
+        // final children cleanup
+        // filter out scoped slots
+        el.children = el.children.filter(c => !(c).slotScope)
+        // remove trailing whitespace node again
+        trimEndingWhitespace(el)
+
+        //检查与状态
+        if( el.pre ){
+            inVPre = false
+        }
+        if( platformIsPreTag(el.tag) ){
+            inPre = false
+        }
+
+        for (let i = 0; i < postTransforms.length; i++) {
+            postTransforms[i](el, options);
+        }
+
     }
     function trimEndingWhitespace(el){
         //remove trailing whitespace node
@@ -176,10 +278,9 @@ export default function parse(template,options){
                 // 从前面过来的
                 stack.push(currentParent)
             }else{
+                console.log(11,element)
                 closeElement(element)
             }
-
-            // console.log(root,unary,22,currentParent)
 
         },
         //闭合元素 更新 stack currentParent
@@ -190,7 +291,14 @@ export default function parse(template,options){
          */
         end(tag,start,end){
             // 每当解析到标签的结束位置时，触发该函数
-            console.log(tag)
+            let element = stack[ stack.length - 1 ]
+            //
+            stack.length -= 1
+            currentParent = stack[ stack.length -1 ]
+            if( options.outputSourceRange ){
+                element.end = end
+            }
+            closeElement(element)
         },
         //处理文本 和 {{}}
         /**
@@ -199,28 +307,59 @@ export default function parse(template,options){
          * @param {Number} end   解析到的纯文本在需要解析的 html 模版中所占的结束位置。注：不一定有，可能没传
          */
         chars(text,start,end){
+            // console.log('init->',text)
             // 每当解析到文本时，触发该函数
             //如果是文本 没有父节点 直接返回
             if( !currentParent ){
                 // if (process.env.NODE_ENV !== 'production') {}
                 if( text === template ){
                     console.warn('Component template requires a root element, rather than just text.')
+                }else if( ( text = text.trim() ) ){
+                    console.warn("text \"" + text + "\" outside root element will be ignored.")
                 }
-                // if( ( text = text.trim() ) ){
-                //     console.warn("text \"" + text + "\" outside root element will be ignored.")
-                // }
                 return
             }
 
-            //IE 跳过
+            //IE 跳过  在最下面拿到了
             let children = currentParent.children
-            // 判断与处理text, 如果children有值，text为空，那么text = ' '; 原因在end中 ？
-            text = text.trim()
-                ? text
-                : children.length() ? ' ' : ''
-
-            if(text){
-                console.log('chars->没有进来')
+            if( inPre || text.trim() ){
+                //是否是 script 或者 style
+                //不是搞成字符串
+                text = isTextTag(currentParent) ? text : decodeHTMLCached(text)
+            }else if( !children.length ){
+                // remove the whitespace-only node right after an opening tag
+                text = '';
+            }else if( whitespaceOption ){
+                console.log('3333')
+            }else{
+                text = preserveWhitespace ? ' ' :''
+            }
+            if( text ){
+                if( !inPre && whitespaceOption === 'condense' ){
+                    console.log(333)
+                }
+                let res,child
+                //将标签里面的文本 搞出来 带有空格
+                //@todo type 的意义
+                if( !inVPre && text !== ' ' && (res = parseText(text,delimiters)) ){
+                    child = {
+                        type:2,
+                        expression:res.expression,
+                        tokens:res.tokens,
+                        text:text
+                    }
+                }else if( text !== ' ' || children.length || children[children.length - 1].text !== ' ' ){
+                    child = {
+                        type : 3,
+                        text : text
+                    }
+                }
+                if( child ){
+                    //当成测试环境 将 start 跟 end 放入
+                    child.start = start
+                    child.end = end
+                    children.push(child)
+                }
             }
 
         },
@@ -247,7 +386,7 @@ export default function parse(template,options){
                     child.start = start
                     child.end = end
                 // }
-                console.log('这是注释')
+                // console.log('这是注释')
 
                 currentParent.children.push(child)
             }
@@ -255,6 +394,45 @@ export default function parse(template,options){
     })
 
     return root
+}
+
+function isTextTag(el){
+    return el.tag === 'script' || el.tag ==='style'
+}
+function parseText(text,delimiters){
+    //正则
+    let tagRE = delimiters ? buildRegex(delimiters) : defaultTagRE
+    if( !tagRE.test(text) ){
+        return
+    }
+
+    let tokens=[],rawTokens =[]
+    let lastIndex = tagRE.lastIndex = 0
+    let match,index,tokenValue
+
+    //检索字符串的正则表达式匹配
+    while( (match =tagRE.exec(text) ) ){
+        index = match.index
+        //带有空格
+        if( index > lastIndex ){
+            rawTokens.push(tokenValue =text.slice(lastIndex,index) )
+            tokens.push(JSON.stringify(tokenValue))
+        }
+        //{{}} 里面的 变量名称
+        let exp = parseFilters(match[1].trim())
+        //_s(exp) 用它来标记吗？
+        tokens.push(( `_s(${exp})` ))
+        rawTokens.push({ '@binding':exp })
+        lastIndex = index + match[0].length
+    }
+    if( lastIndex < text.length ){
+        rawTokens.push(tokenValue = text.slice(lastIndex))
+        tokens.push(JSON.stringify(tokenValue))
+    }
+    return {
+        expression : tokens.join('+'),
+        tokens : rawTokens
+    }
 }
 
 //ast 的容器
@@ -279,6 +457,7 @@ function makeAttrsMap(attrs){
     }
     return map
 }
+
 
 //div p 没有 type
 function isForbiddenTag(el){
@@ -469,12 +648,490 @@ function processOnce(el){
 }
 
 function processElement(el,options){
+    //将:key 从 attrsList 中 删除 并 挂载到 el 中
     processKey(el)
+
+    // determine whether this is a plain element after
+    // removing structural attributes
+    //for
+    el.plain = (
+        !el.key &&  !el.scopedSlots && !el.attrsList.length
+    )
+    //标签上是否有 ref 有的时候 在去 判断是否有 v-for
+    processRef(el)
+    //slot  el.slotScope
+    processSlotContent(el)
+    // <slot /> 标签 name 挂载到el 中 slotName
+    processSlotOutlet(el)
+    //is=xx 动态组件 el.component = xx
+    //inline-template 内联组件 el.inlineTemplate = true
+    processComponent(el)
+
+    //@todo 不知道干啥
+    // for( let i=0;i < transforms.length;i++ ){
+    //     el = transforms[i](el,options) || el
+    // }
+    processAttrs(el)
+    return el
 }
-//将:key
+//将:key 从 attrsList 中 删除 并 挂载到 el 中
 function processKey(el){
     //标签里面 含有 key = 1 exp返回1
     //:key=xxx v-bind:key=xxx
+    //获取 标签中 存在 key 的情况 并 exp 为 = 后面的值
     let exp = getBindingAttr(el,'key')
-    console.log(exp,222,55)
+    if( exp ){
+        {
+            if( el.tag === 'template' ){
+                console.warn(`<template> cannot be keyed. Place the key on real elements instead.${getAndRemoveAttr(el,'key')}`)
+            }
+            //for
+            if( el.for ){
+                let iterator = el.iterator1 || el.iterator2
+                //undefined
+                let parent = el.parent
+                if( iterator && iterator === exp && parent && parent.tag === 'transition-group' ){
+                    console.warn(`
+                        "Do not use v-for index as key on <transition-group> children, "
+                        "this is the same as not using keys.",
+                        ${getRawBindingAttr(el, 'key')},
+                        true /* tip */
+                    `)
+                }
+            }
+        }
+        el.key = exp
+    }
+}
+
+//ref 属性
+function processRef(el){
+    let ref = getBindingAttr(el,'ref')
+    if( ref ){
+        el.ref = ref
+        //ref 跟 v-for 是否 共存
+        el.refInFor = checkInFor(el)
+    }
+}
+//v-for 跟 ref 共存的时候 用 refInFor true
+function checkInFor(el){
+    let parent = el
+    while (parent){
+        if( parent.for !== undefined ){
+            return true
+        }
+    }
+    return false
+}
+
+// handle content being passed to a component as slot,
+// e.g. <template slot="xxx">, <div slot-scope="xxx">
+function processSlotContent(el){
+    let slotScope
+    if( el.tag === 'template' ){
+        slotScope = getAndRemoveAttr(el,'scope')
+        //非生产环境 提示 移除了 scope
+        console.warn(`
+            "the "scope" attribute for scoped slots have been deprecated and "
+            "replaced by "slot-scope" since 2.5. The new "slot-scope" attribute "
+            "can also be used on plain elements in addition to <template> to "
+            "denote scoped slots.",
+            ${el.rawAttrsMap['scope']}
+        `)
+        el.slotScope = slotScope || getAndRemoveAttr(el, 'slot-scope')
+    } else if ( (slotScope = getAndRemoveAttr(el,'slot-scope') ) ){
+        //
+        if( el.attrsMap['v-for'] ){
+            console.warn(`
+                "Ambiguous combined usage of slot-scope and v-for on <" + ${el.tag} + "> " +
+                "(v-for takes higher priority). Use a wrapper <template> for the " +
+                "scoped slot to make it clearer.",
+                ${el.rawAttrsMap['slot-scope']},
+            `)
+        }
+        el.slotScope = slotScope
+    }
+
+    // slot :slot v-bind:slot = xxx
+    let slotTarget = getBindingAttr(el,'slot')
+    if( slotTarget ){
+        el.slotTarget = slotTarget==='""' ? "default" : slotTarget
+        el.slotTargetDynamic = !!(el.attrsMap[':slot']) || el.attrsMap['v-bind:slot']
+        // preserve slot as an attribute for native shadow DOM compat
+        // only for non-scoped slots.
+        if( el.tag !== 'template' && !el.slotScope ){
+            addAttr(el,'slot'.slotTarget,getBindingAttr(el,'slot'))
+        }
+    }
+
+    //2.6 用 v-slot  @todo 临时省略 以后 在写
+    {
+
+    }
+}
+
+// <slot />
+function processSlotOutlet(el){
+    if( el.tag === 'slot'){
+        //slot name
+        el.slotName = getBindingAttr(el,'name')
+        if( el.key ){
+            console.warn(`
+                "'key' does not work on <slot> because slots are abstract outlets " +
+                "and can possibly expand into multiple elements. " +
+                "Use the key on a wrapping element instead.",
+            `)
+        }
+    }
+}
+
+//动态组件 is inline-template
+function processComponent(el){
+    let binding
+    if( ( binding = getBindingAttr(el,'is') ) ){
+        el.component = binding
+    }
+    //内联模版 inline-template
+    if( getAndRemoveAttr(el,'inline-template') != null ){
+        el.inlineTemplate = true
+    }
+}
+
+// 标签上的 各个属性
+function processAttrs(el){
+    //属性 list
+    let list = el.attrsList
+    let i,l,name,rawName,value,modifiers,syncGen,isDynamic
+    for( i = 0,l = list.length; i < l ; i++ ){
+        name = rawName = list[i].name
+        value = list[i].value
+        //vue 标签的 vue属性 : @ v-
+        if( dirRE.test(name) ){
+            //将元素标记为动态
+            el.hasBindings = true
+            modifiers = parseModifiers(name.replace(dirRE,''))
+            // support .foo shorthand syntax for the .prop modifier
+            //v-bind.a v-bind:a.b
+            if( modifiers ){
+                name = name.replace(modifierRE,'')
+            }
+            // v-bind:
+            if( bindRE.test(name) ){
+                name = name.replace(bindRE,'')
+                value = parseFilters(value)
+                //v-bind:[cc.C].sync="cC" ture 有中括号
+                isDynamic = dynamicArgRE.test(name)
+                if( isDynamic ){
+                    name = name.slice(1,-1)
+                }
+                //v-bind 为空是不行的 warn
+                if( value.trim().length ===0 ){
+                    console.warn("The value for a v-bind expression cannot be empty. Found in \"v-bind:" + name + "\"")
+                }
+                //v-bind:a.b v-bind:a的时候不走这儿
+                //v-bind .sync .prop .camel
+                if( modifiers ){
+                    //https://segmentfault.com/a/1190000016786254
+                    // prop v-bind:aa.prop="aa"
+                    if( modifiers.prop && !isDynamic ){
+                        name = camelize(name)
+                        if( name === 'innerHTML'){
+                            name = 'innerHTML'
+                        }
+                    }
+                    //camel v-bind:bb.camel="bb"
+                    //.camel修饰符允许在使用DOM模板时将v-bind属性名称驼峰化，
+                    //.camel-(2.1.0+)将kebab-case特性名转换为camelCase.(从2.1.0开始支持)
+                    if( modifiers.camel && !isDynamic  ){
+                        name = camelize(name)
+                    }
+                    //sync 对prop进行双向绑定
+                    //父组件向子组件传值 同时子组件触发方法 需要修改父组件传递过来的数据
+                    //使用sync的时候，子组件传递的事件名必须为update:value，其中value必须与子组件中props中声明的名称完全一致(如上例中的myMessage，不能使用my-message)
+                    //注意带有 .sync 修饰符的 v-bind 不能和表达式一起使用 (例如 v-bind:title.sync=”doc.title + ‘!’” 是无效的)。取而代之的是，你只能提供你想要绑定的属性名，类似 v-model。
+                    //将 v-bind.sync 用在一个字面量的对象上，例如 v-bind.sync=”{ title: doc.title }”，是无法正常工作的，因为在解析一个像这样的复杂表达式的时候，有很多边缘情况需要考虑。
+                    if (modifiers.sync) {
+                        //v-bind:cc.sync="cC" false
+                        //v-bind:[cc.C].sync="cC" ture 有中括号
+                        //子组件通过 this.$emit('update:cc',params) 父组件 通过 :cc.sync = xxx
+                        if( !isDynamic ){
+                            syncGen = genAssignmentCode(value,"$event")
+                            //实现绑定
+                            // addHandler(el, ("update:"+(camelize(name))), syncGen,null,false,list[i])
+                        }else{
+
+                        }
+                        console.log('modifiers.sync-------->',name,value,isDynamic)
+                    }
+
+                }
+
+            }else if( onRE.test(name) ){
+                //上面将click.xx 后面的点 去掉了
+                //v-on 或 @click
+                //将 @ 去除
+                name = name.replace(onRE,'')
+                // v-on:click.prevent false name -> click
+                //v-on:[click.prevent] true name->click.prevent
+                isDynamic = dynamicArgRE.test(name)
+                if( isDynamic ){
+                    name = name.slice(1,-1)
+                }
+                //将事件 绑定修饰符
+                addHandler(el,name,value,modifiers,false,list[i],isDynamic)
+            }else{
+                //正常指令 不包括v-if v-for 已经处理过了 processIf
+                //v-text v-html v-model v-show
+                name = name.replace(dirRE,'')
+                //解析参数
+                let argMatch = name.match(argRE)
+                let arg = argMatch && argMatch[1]
+                isDynamic = false
+                //没有这么用过啊
+                if( arg ){
+                    name = name.slice(0,-(arg.length +1))
+                    if( dynamicArgRE.test(arg) ){
+                        arg = arg.slice(1,-1)
+                        isDynamic = true
+                    }
+                }
+                //directives 自定义指令相关的 东西
+                addDirective(el,name,value,arg,isDynamic,modifiers,list[i])
+                //v-model 跟 v-for 不能同时使用 检查 v-model
+                if( name === 'model' ){
+                    checkForAliasModel(el,value)
+                }
+            }
+        }else{
+            //不是vue 的属性 如 id class style title href
+            //块级作用域
+            {
+                let res = parseText(value,delimiters)
+                if( res ){
+                    console.warn(
+                        name + "=\"" + value + "\": " +
+                        'Interpolation inside attributes has been removed. ' +
+                        'Use v-bind or the colon shorthand instead. For example, ' +
+                        'instead of <div id="{{ val }}">, use <div :id="val">.',
+                            list[i]
+                    );
+                }
+            }
+            addAttr(el,name,JSON.stringify(value),list[i])
+            // firefox doesn't update muted state if set via attribute
+            // even immediately after element creation
+            if( !el.component && name === 'muted' && platformMustUseProp(el.tag, el.attrsMap.type, name) ){
+                addProp(el,name,'true',list[i])
+            }
+        }
+    }
+}
+
+function parseModifiers(name){
+    //name值 v-bind:click->bind:click @:click->:click
+    let match = name.match(modifierRE)
+    if( match ){
+        let ret = {}
+        match.forEach((m)=>{
+            ret[ m.slice(1) ]= true
+        })
+        return ret
+    }
+}
+
+function genAssignmentCode(value,assignment){
+    let res = parseModel(value)
+    console.log(res,99999)
+}
+let len
+
+// Fix https://github.com/vuejs/vue/pull/7730
+// allow v-model="obj.val " (trailing whitespace)
+function parseModel(val){
+    val = val.trim()
+    len = val.length
+
+}
+
+/**
+ * @param el              整个节点
+ * @param name            类似 click
+ * @param value           click=value
+ * @param modifiers
+ * @param important
+ * @param range           单个节点
+ * @param dynamic
+ * **/
+//click 绑定的事件 修饰符
+function addHandler(el,name,value,modifiers,important,range,dynamic){
+    /*
+    *  modifiers 几种情况                                           dynamic
+    *       v-on:click.prevent   {prevent: true}                    true
+    *       v-on:[click.prevent]   undefined                        true
+    *       v-on:click  undefined                                   false
+    *       v-on:[click,dd]或者v-on:[click]   undefined              true
+    * */
+    modifiers = modifiers || emptyObject
+    if( modifiers.prevent && modifiers.passive ){
+        console.warn(`passive and prevent can't be used together. Passive handler can't prevent default event`)
+    }
+
+    // normalize click.right and click.middle since they don't actually fire
+    // this is technically browser-specific, but at least for now browsers are
+    // the only target envs that have right/middle clicks.
+    //右键
+    //click.right
+    if( modifiers.right ){
+        if( dynamic ){
+            name = `(${name})==='click'?'contextmenu':(${name})`
+        }else if(name === 'click'){
+            name = 'contextmenu'
+            delete modifiers.right
+        }
+    }else if( modifiers.middle ){
+        //click.middle
+        //滚轮
+        if( dynamic ){
+            name = `(${name}) === 'click'?'mouseup':(${name})`
+        }else if(name === 'click'){
+            name = 'mouseup'
+        }
+    }
+    //click.capture 冒泡排序
+    if( modifiers.capture){
+        delete modifiers.capture
+        //name -> !click 或者 _p(click,!)
+        name = prependModifierMarker('!',name,dynamic)
+    }
+
+    //click.once
+    if( modifiers.once ){
+        delete modifiers.once
+        name = prependModifierMarker('~',name,dynamic)
+    }
+    //istanbul ignore if
+    //click.passive 执行默认方法
+    if( modifiers.passive ){
+        delete modifiers.passive
+        name = prependModifierMarker('&',name,dynamic)
+    }
+
+    let events;
+    //click.native  父组件中给子组件绑定一个原生的事件 将子组件变成了普通的html标签
+    //将vue组件转为普通的html标签，并且对普通html标签没有任何作用
+    if( modifiers.native ){
+        delete modifiers.native
+        events = el.nativeEvents || (el.nativeEvents={})
+    }else{
+        events = el.events || (el.events = {})
+    }
+    //将click事件对应的名称 添加 start end
+    let newHandler = rangeSetItem({
+        value:value.trim(),
+        dynamic
+    },range)
+
+    //冻结
+    if( modifiers !== emptyObject ){
+        newHandler.modifiers = modifiers
+    }
+
+    let handlers = events[name]
+    if(Array.isArray(handlers)){
+        important ? handlers.unshift(newHandler) : handlers.push(newHandler);
+    }else if(handlers){
+        events[name] = important ? [newHandler, handlers] : [handlers, newHandler];
+    }else{
+        events[name] = newHandler
+    }
+
+    el.plain = false
+}
+
+function prependModifierMarker(symbol,name,dynamic){
+    return dynamic
+        ? ("_p(" + name + ",\"" + symbol + "\")")
+        : symbol + name
+}
+//将click事件对应的名称 添加 start end
+function rangeSetItem(item,range){
+    //{name: "v-on:click.native", value: "tag", start: 53, end: 76}
+    if( range ){
+        //一直当测试环境 所以都添加了 start跟end
+        if( range.start != null ){
+            item.start = range.start
+        }
+        if( range.end != null ){
+            item.end = range.end
+        }
+    }
+    return item
+}
+
+//directives 自定义指令相关的
+function addDirective(el,name,rawName,value,arg,isDynamicArg,modifiers,range){
+    (el.directives || (el.directives = [])).push(rangeSetItem({
+        name: name,
+        rawName: rawName,
+        value: value,
+        arg: arg,
+        isDynamicArg: isDynamicArg,
+        modifiers: modifiers
+    }, range));
+    el.plain = false;
+}
+//v-model 节点 跟 v-model = value
+function checkForAliasModel(el,value){
+    let _el = el
+    while (_el){
+        if( _el.for && _el.alias === value ){
+            console.warn(`
+                <${el.tag}> v-model=${value}
+                "You are binding v-model directly to a v-for iteration alias. "
+                "This will not be able to modify the v-for source array because "
+                "writing to the alias is like modifying a function local variable. "
+                "Consider using an array of objects and use v-model on an object property instead.",
+            `)
+        }
+        _el = _el.parent
+    }
+}
+
+function addProp (el, name, value, range, dynamic) {
+    (el.props || (el.props = [])).push(rangeSetItem({ name: name, value: value, dynamic: dynamic }, range));
+    el.plain = false;
+}
+
+//当template里面存在 v-else 或者 v-else-if
+//@todo 回头将 if 这 在搞搞
+function processIfConditions(el,parent){
+    let prev = findPrevElement(parent.children)
+    if( prev && prev.if ){
+        addIfCondition(prev,{
+            exp: el.elseif,
+            block:el
+        })
+    }else{
+        //就是测试环境
+        console.warn("v-" + (el.elseif ? ('else-if="' + el.elseif + '"') : 'else') + " " +
+            "used on element <" + (el.tag) + "> without corresponding v-if.",
+            el.rawAttrsMap[el.elseif ? 'v-else-if' : 'v-else'])
+    }
+}
+function findPrevElement(children){
+    let i = children.length
+    while ( i-- ){
+
+        if (children[i].type === 1) {
+            return children[i]
+        } else {
+            if (children[i].text !== ' ') {
+                console.warn(`
+                    text  '(${children[i].text.trim()})' between v-if and v-else(-if)  will be ignored.
+                `)
+            }
+            children.pop();
+        }
+
+    }
 }
