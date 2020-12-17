@@ -5,8 +5,6 @@
  *  柯里化
  * */
 
-import parse from './parse.js'
-
 //compile 是一个函数 有返回值
 function createCompileToFunctionFn(compile){
     // console.log(3)
@@ -58,8 +56,7 @@ const createCompiler = createCompilerCreator(function baseCompile(template,optio
     // console.log('处理的template字符串-->',template)
     //生成ast 上面的 可以不用 直接用这个
     //https://astexplorer.net/
-    const ast = parse(template.trim(),options)
-    console.log('生成的ast--->',ast)
+    console.log('currying')
     // console.log(111)
     // return {
     //     ast:ast
