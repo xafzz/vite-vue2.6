@@ -4,7 +4,7 @@
         这是一段正常的文字br
     </div>
     <!-- 这是一段注释 -->
-    <div class="center" >
+    <div class="center" v-once >
         <p>{{ msg }}</p>
     </div>
     <div class="bottom">

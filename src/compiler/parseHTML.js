@@ -1,4 +1,6 @@
-
+import {
+    makeMap
+} from './helpers.js'
 /**
  * unicode letters used for parsing html tags, component names and property paths.
  * using https://www.w3.org/TR/html53/semantics-scripting.html#potentialcustomelementname
@@ -38,18 +40,6 @@ const isUnaryTag = makeMap(
 )
 
 
-function makeMap(str,expectsLowerCase){
-    let map = Object.create(null)
-    let list = str.split(',')
-    for (let i=0 ;i<list.length ;i++){
-        map[ list[i] ] = true
-    }
-
-    return expectsLowerCase
-        //为什么要转成小写
-        ? function (val) { return map[val.toLowerCase()] }
-        : function (val) { return map[val] }
-}
 
 export default function parseHTML(html, options) {
     // console.log(html,options)

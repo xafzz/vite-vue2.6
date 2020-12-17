@@ -5,7 +5,8 @@ import {
     getAndRemoveAttr,
     getBindingAttr,
     getRawBindingAttr,
-    addAttr
+    addAttr,
+    cached  //将创建缓存的移到helper里面
 } from "./helpers.js";
 import parseFilters from "./filter-parser.js";
 //IE 的暂时忽略
@@ -56,16 +57,7 @@ const he = {
 }
 
 const decodeHTMLCached = cached(he.decode)
-/**
- * Create a cached version of a pure function.
- */
-function cached (fn) {
-    let cache = Object.create(null);
-    return (function cachedFn (str) {
-        let hit = cache[str];
-        return hit || (cache[str] = fn(str))
-    })
-}
+
 
 let transforms,delimiters,platformMustUseProp,postTransforms
 //html 转 ast

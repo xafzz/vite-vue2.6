@@ -74,9 +74,40 @@ function rangeSetItem(item,range){
     return item
 }
 
+/**
+ * Create a cached version of a pure function.
+ * 这也是一个高阶函数
+ *  @todo 需要好好理解下
+ */
+function cached (fn) {
+    let cache = Object.create(null);
+    // 返回函数 函数中使用了外部的cache ----闭包
+    return (function cachedFn (str) {
+        let hit = cache[str];
+        return hit || (cache[str] = fn(str))
+    })
+}
+/**
+ * 这个一块看看吧
+ * @todo 下下
+ * */
+function makeMap(str,expectsLowerCase){
+    let map = Object.create(null)
+    let list = str.split(',')
+    for (let i=0 ;i<list.length ;i++){
+        map[ list[i] ] = true
+    }
+
+    return expectsLowerCase
+        //为什么要转成小写
+        ? function (val) { return map[val.toLowerCase()] }
+        : function (val) { return map[val] }
+}
 export {
     getAndRemoveAttr,
     getBindingAttr,
     getRawBindingAttr,
-    addAttr
+    addAttr,
+    cached,
+    makeMap
 }
