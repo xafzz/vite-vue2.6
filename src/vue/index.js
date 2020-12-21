@@ -1,4 +1,3 @@
-import Observer from "../observer/index.js";
 import {compileToFunctions,compile} from "../compiler/index.js";
 
 const Vue = function(options){

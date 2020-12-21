@@ -7,10 +7,10 @@
 
 //compile 是一个函数 有返回值
 function createCompileToFunctionFn(compile){
-    // console.log(3)
+    console.log(3)
     let cache = Object.create(null)
     return function compileToFunctions(template,options){
-        // console.log(4)
+        console.log(4)
         //这句起到了很重要的作用
         //
         const compiled = compile(template,options)
@@ -26,14 +26,14 @@ function createCompileToFunctionFn(compile){
 
 //吧整个函数当参数传进来 这是 函数 funciton baseCompile
 function createCompilerCreator(baseCompile){
-    // console.log(1)
+    console.log(1)
     // console.log(baseCompile)
     //return createCompiler
     return function createCompiler(baseOptions){
-        // console.log(2)
+        console.log(2)
         // console.log(baseOptions)
         function compile(template,options){
-            // console.log(5)
+            console.log(5)
             let finalOptions = Object.create(baseOptions)
             let compiled = baseCompile(template.trim(),finalOptions)
 
@@ -52,15 +52,9 @@ function createCompilerCreator(baseCompile){
 
 //js 柯里化 逐步传参  参数复用 提前确认  延迟确认 bind
 const createCompiler = createCompilerCreator(function baseCompile(template,options){
-    // console.log(6)
-    // console.log('处理的template字符串-->',template)
-    //生成ast 上面的 可以不用 直接用这个
-    //https://astexplorer.net/
-    console.log('currying')
-    // console.log(111)
-    // return {
-    //     ast:ast
-    // }
+    console.log(6)
+
+    console.log('currying','baseOptions---->',baseOptions)
 })
 
 //搞成空的吧
