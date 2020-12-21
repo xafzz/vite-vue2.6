@@ -4,10 +4,10 @@
         这是一段正常的文字br
     </div>
     <!-- 这是一段注释 -->
-    <div class="center" v-once >
-        <p>{{ msg }}</p>
+    <div class="center" v-if="1">
+        <div>{{ msg }}</div>
     </div>
-    <div class="bottom">
+    <div class="bottom" >
         <a href="/" target="_blank" title="11" id="link" class="link" name="a">第三方的身份</a>
     </div>
 </div>

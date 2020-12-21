@@ -7,3 +7,11 @@
 ## 小结
     
     要不趁现在还早 把柯里化跟options 各搞一个分支把
+---------
+
+### 关于options 
+   
+    必须之前加上 在parse阶段 跳过去了
+    opzimize 阶段又用到了，
+    重新搞下options，然后在重新梳理 parse跟opzimize阶段
+    

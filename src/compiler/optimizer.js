@@ -37,6 +37,7 @@ export default function optimize(root,options) {
     if( !root ){
         return
     }
+
     //返回了 函数
     isStaticKey = getStaticKeysCached(options.staticKeys || '')
     isPlatformReservedTag = options.isReservedTag || no
@@ -46,7 +47,9 @@ export default function optimize(root,options) {
     markStatic(root)
     // second pass: mark static roots.
     // 第二步 标记 静态 根
+    // 只处理节点
     markStaticRoots(root,false)
+    console.log(root)
 }
 //通用静态健
 //仔细一看 这不就是 ast里面的各个属性嘛
@@ -58,7 +61,6 @@ function genStaticKeys(keys){
 }
 //第一步 标记所有非静态节点
 function markStatic(node){
-    console.log(node)
     node.static = isStatic(node)
     //节点
     if( node.type === 1 ){
@@ -71,6 +73,8 @@ function markStatic(node){
          *  静态插槽内容无法进行热重新加载
          */
         //我勒个去 走到这 直接走不下去了
+        //options 应该搞搞 要不进行不下去
+        //添加了options的isReservedTag 又可以继续了
         if(
             !isPlatformReservedTag(node.tag) &&
             node.tag !== 'slot' &&
@@ -78,7 +82,31 @@ function markStatic(node){
         ){
             return
         }
-        console.log(111)
+
+        //递归的形式 获取每个节点 并打上标记
+        for( let i=0,l=node.children.length;i<l;i++ ){
+            let child = node.children[i]
+            markStatic(child)
+            if( !child.static ){
+                node.static = false
+            }
+        }
+        //节点上是否有if
+        //递归 下面的元素
+        //晕了 有到processIf里面去了 无限循环了
+
+        if( node.ifConditions ){
+            //这里面也是通过 parse 加上的
+            //误会了 这里i默认值是1
+            for( let i = 1,len=node.ifConditions.length;i<len;i++ ){
+                let block = node.ifConditions[i].block
+                //前面代码 导致这有个无限循环 是因为写成了 i=0
+                markStatic(block)
+                if( !block.static ){
+                    node.static = false
+                }
+            }
+        }
     }
 }
 
@@ -86,14 +114,41 @@ function markStatic(node){
 function markStaticRoots(node,isInFor){
     //只有是节点的时候
     if( node.type === 1 ){
+        if( node.static || node.once ){
+            node.staticInFor = isInFor
+        }
+        // For a node to qualify as a static root, it should have children that
+        // 使节点符合静态根，它应该具有
+        // are not just static text. Otherwise the cost of hoisting out will
+        // 不仅仅是静态文本
+        // outweigh the benefits and it's better off to just always render it fresh.
+        // 静态节点 存在子元素
+        if( node.static && node.children.length && !(node.children.length === 1 && node.children[0].type === 3) ){
+            node.staticRoot = true
+            return
+        }else{
+            node.staticRoot = false
+        }
 
+        //todo 可能是因为没有 options的原因
+        if( node.children ){
+            for( let i=0,l=node.children.length; i < l ; i++ ){
+                let child = node.children[i]
+                markStaticRoots(child,isInFor || !!node.for)
+            }
+        }
+        // 有if 的情况
+        if( node.ifConditions ){
+            for( let i = 1,l = node.ifConditions.length; i<l;i++ ){
+                let child = node.ifConditions[i].block
+                markStaticRoots(child,isInFor)
+            }
+        }
     }
-    console.log(node,isInFor)
 }
 
 //从生成 ast 的过程 延伸过来 这块就相对好理解了
 function isStatic(node){
-    console.log(node.type)
     //表达式  当时动态的时候 node.expression _s(xx)
     if( node.type === 2){
         return false

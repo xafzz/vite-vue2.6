@@ -23,7 +23,7 @@ function getAndRemoveAttr(el,name,removeFromMap){
         delete el.attrsMap[name]
     }
 
-    // console.log(val,name)
+    // console.log(val,name,removeFromMap)
     return val
 }
 

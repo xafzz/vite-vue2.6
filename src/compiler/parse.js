@@ -602,12 +602,17 @@ function extend(el,_form){
 //v-if
 function processIf(el){
     //v-if= 后面的 表达式
+    //
+    let element = el
+    //这里没有吧 v-if 从 attrMap中移除
     let exp = getAndRemoveAttr(el,'v-if')
     if( exp ){
         //if的表达式
+        //每次循环都走到这 这还是有点问题 打静态标记的时候 这出问题了
+        //误会了 optimizer 里面 判断if 的 从1 开始
         el.if = exp
         addIfCondition(el,{
-            exp,
+            exp:exp,
             block:el
         })
     }else{
@@ -1096,6 +1101,7 @@ function addProp (el, name, value, range, dynamic) {
 //当template里面存在 v-else 或者 v-else-if
 //@todo 回头将 if 这 在搞搞
 function processIfConditions(el,parent){
+
     let prev = findPrevElement(parent.children)
     if( prev && prev.if ){
         addIfCondition(prev,{
@@ -1116,6 +1122,7 @@ function findPrevElement(children){
         if (children[i].type === 1) {
             return children[i]
         } else {
+            //中间有注释的时候 也不行 看来还有后续操作
             if (children[i].text !== ' ') {
                 console.warn(`
                     text  '(${children[i].text.trim()})' between v-if and v-else(-if)  will be ignored.
