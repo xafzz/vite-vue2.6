@@ -1,5 +1,6 @@
 
 import {compileToFunctions,compile} from "../compiler/index.js";
+import { query } from '../util/index.js'
 
 const Vue = function(options){
 
@@ -32,18 +33,3 @@ Vue.prototype.$mount = function(el){
 }
 
 export default Vue
-
-function query(el){
-    //还有其他的
-    if( typeof el === 'string' ){
-        let selected = document.querySelector(el)
-        if( !selected ){
-            //warning 提示 同时创建 一个div
-            console.warn('找不到节点：'+el)
-            return document.createElement('div')
-        }
-        return selected
-    }else{
-        return el
-    }
-}

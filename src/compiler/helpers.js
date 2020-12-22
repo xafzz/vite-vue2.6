@@ -1,5 +1,5 @@
 
-import parseFilters from './filter-parser.js'
+import parseFilters from './parse/filter-parser.js'
 
 // note: this only removes the attr from the Array (attrsList) so that it
 // doesn't get processed by processAttrs.
@@ -104,6 +104,12 @@ function makeMap(str,expectsLowerCase){
         : function (val) { return map[val] }
 }
 
+//add a raw attr (use this in preTransforms)
+function addRawAttr(el,name,value,range){
+    el.attrsMap[name] = value
+    el.attrsList.push(rangeSetItem({ name, value }, range))
+}
+
 
 function addProp(el,name,value,range,dynamic){
     (el.props || (el.props = [])).push(rangeSetItem({ name, value, dynamic }, range))
@@ -117,5 +123,6 @@ export {
     addAttr,
     cached,
     makeMap,
-    addProp
+    addProp,
+    addRawAttr
 }

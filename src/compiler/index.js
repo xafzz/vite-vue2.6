@@ -7,6 +7,7 @@
  * */
 
 import { baseOptions } from './options.js'
+import parse from './parse/index.js'
 
 
 //compile 是一个函数 有返回值
@@ -57,7 +58,19 @@ function createCompilerCreator(baseCompile){
 //js 柯里化 逐步传参  参数复用 提前确认  延迟确认 bind
 //没有实现 options 各种不行
 const createCompiler = createCompilerCreator(function baseCompile(template,options){
-    console.log('options------->',baseOptions)
+    // console.log(6)
+    //源码位置 vue/src/compiler/index.js
+    //第一步 template生成ast
+    //添加了 options 重写一遍 parse 过程
+    let ast = parse(template.trim(),options)
+    console.log(ast)
+    // console.log(ast)
+    //第二步 优化器 打静态标记
+    // if (options.optimize !== false) {
+    //     optimize(ast, options)
+    // }
+    //第三步 生成代码 generate
+    // const code = generate(ast, options)
 })
 
 
