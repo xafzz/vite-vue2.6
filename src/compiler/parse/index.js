@@ -96,8 +96,6 @@ export default function (template,options){
     // 当前需要处理的元素父级元素
     let currentParent;
 
-
-    // todo 是指的根元素单闭合吗
     //处理单闭合标签
     function closeElement(el){
         //一进来先删除一遍
@@ -546,6 +544,47 @@ export function processFor(el){
     }
 }
 
+//v-for = 后面的 那段 (item,key) in list
+function parseFor(exp){
+    // in of 正则一哈
+    let inMatch = exp.match(forAliasRE)
+    if( !inMatch ){
+        return
+    }
+    let res = {}
+    //循环的对象是谁 in/of 后面的
+    res.for = inMatch[2].trim()
+    //循环 中 value跟 key  in/of 前面的 将 () 替换成 空
+    let alias = inMatch[1].trim().replace(stripParensRE,'')
+    //iteratorMatch [",key", "key", undefined, index: 4, input: "item,key", groups: undefined]
+    let iteratorMatch = alias.match(forIteratorRE)
+    //item in xxx null  alias->item
+    //(item) in xxx null    alias->item
+    //(value,key) in xx iteratorMatch true
+    if(iteratorMatch){
+        //value
+        res.alias = alias.replace(forIteratorRE,'').trim()
+        // key
+        res.iterator1 = iteratorMatch[1].trim()
+        //(item,key,index) in list
+        //有下标的时候
+        if( iteratorMatch[2] ){
+            res.iterator2 = iteratorMatch[2].trim()
+        }
+    }else{
+        res.alias = alias
+    }
+    return res
+}
+
+//将属性混合到el中
+function extend(el,_form){
+    for( let key in _form ){
+        el[key] = _form[key]
+    }
+    return el
+}
+
 //v-if
 function processIf(el){
     //v-if= 后面的 表达式
@@ -881,7 +920,7 @@ function parseModifiers(name){
     }
 }
 
-
+//跟 v-bind 修饰符 sync相关
 function genAssignmentCode(value,assignment){
     let res = parseModel(value)
     console.log(res,99999)

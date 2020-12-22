@@ -93,3 +93,10 @@
     有很多todo直接写到里面，包括@todo，#todo，实话实说很多不明白的地方
     注释有点多，因为不明白的地方实在有点多，比较符合我代码的风格，哈哈
     在不断的放弃中，终于搞完一版
+
+## 问题
+    
+    processSlotContent 函数没有写完整  //2.6 用 v-slot
+    processAttrs v-bind修饰符 .sync 没有写完整
+    genAssignmentCode 没有写完整
+    IE相关的代码忽略
