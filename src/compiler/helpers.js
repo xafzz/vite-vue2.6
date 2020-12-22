@@ -103,11 +103,19 @@ function makeMap(str,expectsLowerCase){
         ? function (val) { return map[val.toLowerCase()] }
         : function (val) { return map[val] }
 }
+
+
+function addProp(el,name,value,range,dynamic){
+    (el.props || (el.props = [])).push(rangeSetItem({ name, value, dynamic }, range))
+    el.plain = false
+}
+
 export {
     getAndRemoveAttr,
     getBindingAttr,
     getRawBindingAttr,
     addAttr,
     cached,
-    makeMap
+    makeMap,
+    addProp
 }

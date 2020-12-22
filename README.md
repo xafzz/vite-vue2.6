@@ -1,17 +1,70 @@
-# 第五步 优化器 ast到optimize 打静态标记
+# 第四步 options相关
 
-## 问题
-    
-    刚上来代码没敲2行 markStatic 直接给我return了，把我整懵B了
+###### 源码：vue/src/platforms/web/compiler/options.js
+###### 共有10属性，用到的时候具体回来在补上
 
-## 小结
-    
-    要不趁现在还早 把柯里化跟options 各搞一个分支把
----------
+    这个还是需要单独写一写，因为在compile过程都用到了
 
-### 关于options 
-   
-    必须之前加上 在parse阶段 跳过去了
-    opzimize 阶段又用到了，
-    重新搞下options，然后在重新梳理 parse跟opzimize阶段
+
+## expectHTML
+    默认为true
+
+
+## modules
     
+    没有直接按源码敲一遍，后面用到到时候 在回来补上
+    包括 class、model、style
+
+
+## directives
+
+    没有直接按源码敲一遍，后面用到到时候 在回来补上
+    自定义指令？
+
+## isPreTag
+
+    export const isPreTag = (tag) => tag === 'pre'
+
+## isUnaryTag
+
+    isUnaryTag = makeMap(
+        'area,base,br,col,embed,frame,hr,img,input,isindex,keygen,' +
+        'link,meta,param,source,track,wbr'
+    )
+    
+## mustUseProp
+    
+    mustUseProp = (tag, type, attr) =>{
+        return (
+            ( attr === 'value' && acceptValue(tag)) && type !== 'button' ||
+            ( attr === 'selected' && tag === 'option') ||
+            ( attr === 'checked' && tag === 'input' ) ||
+            ( attr === 'muted' && tag === 'video' )
+        )
+    }
+
+## canBeLeftOpenTag
+
+    canBeLeftOpenTag = makeMap(
+        'colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr,source'
+    )
+
+## isReservedTag
+    
+    在optimize打静态标记的时候 用到了
+    isReservedTag = (tag) => isHTMLTag(tag) || isSVG(tag)
+
+## getTagNamespace
+    
+    if( isSVG(tag) ){
+        return 'svg'
+    }
+
+    if( tag === 'match' ){
+        return 'match'
+    }
+
+## staticKeys
+    
+    静态标记的时候 也用到了
+    reduce() 方法接收一个函数作为累加器，数组中的每个值（从左到右）开始缩减，最终计算为一个值。
