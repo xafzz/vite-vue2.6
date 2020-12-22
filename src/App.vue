@@ -8,6 +8,9 @@
     <div class="center" v-if="1">
         <p>{{ msg }}</p>
     </div>
+    <div>
+        <div>ddd</div>
+    </div>
     <div class="bottom" >
         <a href="/" target="_blank" title="11" id="link" class="link" name="a">第三方的身份</a>
     </div>
