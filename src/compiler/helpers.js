@@ -116,6 +116,16 @@ function addProp(el,name,value,range,dynamic){
     el.plain = false
 }
 
+
+function pluckModuleFunction (modules,key){
+    return modules
+        ? modules.map(m=>{
+            return m[key]
+        }).filter(_=>_) //filter 创建一个新的数组，新数组中的元素是通过检查制定的数组中的符合条件的所有元素
+        : []
+}
+
+
 export {
     getAndRemoveAttr,
     getBindingAttr,
@@ -124,5 +134,6 @@ export {
     cached,
     makeMap,
     addProp,
-    addRawAttr
+    addRawAttr,
+    pluckModuleFunction
 }

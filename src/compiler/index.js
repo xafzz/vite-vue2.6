@@ -9,6 +9,7 @@
 import { baseOptions } from './options.js'
 import parse from './parse/index.js'
 import optimize from './optimizer.js'
+import generate from './codegen/index.js'
 
 
 //compile 是一个函数 有返回值
@@ -63,14 +64,14 @@ const createCompiler = createCompilerCreator(function baseCompile(template,optio
     //源码位置 vue/src/compiler/index.js
     //第一步 template生成ast
     //添加了 options 重写一遍 parse 过程
-    options.whitespace = 'condense'
+    // options.whitespace = 'condense'
     let ast = parse(template.trim(),options)
     //第二步 优化器 打静态标记
     if (options.optimize !== false) {
         optimize(ast, options)
     }
     //第三步 生成代码 generate
-    // const code = generate(ast, options)
+    const code = generate(ast, options)
 })
 
 

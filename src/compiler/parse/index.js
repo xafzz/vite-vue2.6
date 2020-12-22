@@ -1,11 +1,14 @@
 
+//pluckModuleFunction 移到helper里面
 import {
-    addAttr,
+    addAttr,pluckModuleFunction,
     cached, getAndRemoveAttr, getBindingAttr, getRawBindingAttr
 } from "../helpers.js";
 import parseText from './parseTEXT.js'
 import parseHTML from "./parseHTML.js";
-import {no} from "../../shared/util.js";
+import {
+    no ,extend
+} from "../../shared/util.js";
 import parseFilters from "./filter-parser.js";
 
 //冻结的值 热然可以将变量的引用替换掉
@@ -425,14 +428,6 @@ function isTextTag(el){
     return el.tag === 'script' || el.tag ==='style'
 }
 
-function pluckModuleFunction (modules,key){
-    return modules
-        ? modules.map(m=>{
-            return m[key]
-        }).filter(_=>_) //filter 创建一个新的数组，新数组中的元素是通过检查制定的数组中的符合条件的所有元素
-        : []
-}
-
 //div p 没有 type
 function isForbiddenTag(el){
     return (
@@ -567,13 +562,6 @@ function parseFor(exp){
     return res
 }
 
-//将属性混合到el中
-function extend(el,_form){
-    for( let key in _form ){
-        el[key] = _form[key]
-    }
-    return el
-}
 
 //v-if
 function processIf(el){

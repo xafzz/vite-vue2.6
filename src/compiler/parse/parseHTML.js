@@ -252,6 +252,14 @@ export default function parseHTML(html,options){
                 console.log('木有走到这')
             }
             if( canBeLeftOpenTag(tagName) && lastTag === tagName ){
+                /**
+                 <div className="main" style="background: red;border: 1px solid red;">
+                     <p>
+                        <p>ddd</p>
+                     </p>
+                 </div>
+                 */
+                //这种情况 走到这儿了
                 console.log('也木有走着')
             }
         }
