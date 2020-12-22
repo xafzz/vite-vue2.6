@@ -29,16 +29,6 @@ const forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/
 const forIteratorRE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/;
 //正则括号 ()
 const stripParensRE = /^\(|\)$/g;
-//双花括号
-const  defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g;
-const regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g;
-
-
-const buildRegex = cached((delimiters)=>{
-    let open = delimiters[0].replace(regexEscapeRE,'\\$&')
-    let close = delimiters[1].replace(regexEscapeRE,'\\$&')
-    return new RegExp(open + '((?:.|\\n)+?)' + close, 'g')
-})
 /**
  * Camelize a hyphen-delimited string.
  */
