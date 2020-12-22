@@ -63,7 +63,7 @@ const createCompiler = createCompilerCreator(function baseCompile(template,optio
     //第一步 template生成ast
     //添加了 options 重写一遍 parse 过程
     let ast = parse(template.trim(),options)
-    console.log(ast)
+    console.log('ast-->',ast)
     // console.log(ast)
     //第二步 优化器 打静态标记
     // if (options.optimize !== false) {
