@@ -252,6 +252,7 @@ export default function parseHTML(html,options){
                 console.log('木有走到这')
             }
             if( canBeLeftOpenTag(tagName) && lastTag === tagName ){
+                console.log('也木有走1着',canBeLeftOpenTag(tagName),lastTag,tagName,tagName)
                 /**
                  <div className="main" style="background: red;border: 1px solid red;">
                      <p>
@@ -260,7 +261,7 @@ export default function parseHTML(html,options){
                  </div>
                  */
                 //这种情况 走到这儿了
-                console.log('也木有走着')
+                parseEndTag(tagName)
             }
         }
         //area,base,br,col,embed,frame,hr,img,input,isindex,keygen,link,meta,param,source,track,wbr 为true

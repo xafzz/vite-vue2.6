@@ -28,11 +28,20 @@ function transformNode(el, options ){
     }
 }
 
+//果然generate 用到这了
+// generate.js genData() 函数里面用到了
 function genData(el){
-
-
-
-    console.log('generate 才用吧')
+    let data = ''
+    //分别对应上文中的 transformNode()
+    //class
+    if ( el.staticClass ){
+        data += `staticClass:${el.staticClass},`
+    }
+    if( el.classBinding ){
+        data += `class:${el.classBinding},`
+    }
+    return data
+    // console.log('generate 才用吧')
 }
 
 export default {

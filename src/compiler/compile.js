@@ -7,9 +7,9 @@
  * */
 
 import { baseOptions } from './options.js'
-import parse from './parse/index.js'
+import parse from './parse/parse.js'
 import optimize from './optimizer.js'
-import generate from './codegen/index.js'
+import generate from './codegen/generate.js'
 
 
 //compile 是一个函数 有返回值
@@ -61,7 +61,7 @@ function createCompilerCreator(baseCompile){
 //没有实现 options 各种不行
 const createCompiler = createCompilerCreator(function baseCompile(template,options){
     // console.log(6)
-    //源码位置 vue/src/compiler/index.js
+    //源码位置 vue/src/compiler/parse.js
     //第一步 template生成ast
     //添加了 options 重写一遍 parse 过程
     // options.whitespace = 'condense'
@@ -72,6 +72,7 @@ const createCompiler = createCompilerCreator(function baseCompile(template,optio
     }
     //第三步 生成代码 generate
     const code = generate(ast, options)
+    console.log('code------>',code)
 })
 
 

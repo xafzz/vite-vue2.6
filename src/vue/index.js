@@ -1,5 +1,5 @@
 
-import {compileToFunctions,compile} from "../compiler/index.js";
+import {compileToFunctions,compile} from "../compiler/compile.js";
 import { query } from '../util/index.js'
 
 const Vue = function(options){

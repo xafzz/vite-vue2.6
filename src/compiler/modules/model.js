@@ -4,7 +4,7 @@ import {
 } from "../helpers.js";
 import {
     processFor,processElement,addIfCondition,createASTElement
-} from '../parse/index.js'
+} from '../parse/parse.js'
 
 /**
  * Expand input[v-model] with dynamic type bindings into v-if-else chains

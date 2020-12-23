@@ -287,7 +287,7 @@ export default function (template,options){
         end(tag,start,end){
             // 每当解析到标签的结束位置时，触发该函数
             let element = stack[ stack.length - 1 ]
-            //
+            //@todo 为什么会有负数出来 尴尬
             stack.length -= 1
             currentParent = stack[ stack.length -1 ]
             if( options.outputSourceRange ){
