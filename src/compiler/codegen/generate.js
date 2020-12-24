@@ -7,6 +7,61 @@ import {
     no,extend,noop
 } from "../../shared/util.js";
 
+
+const fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
+const fnInvokeRE = /\([^)]*?\);*$/;
+const simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/;
+
+// KeyboardEvent.keyCode aliases
+//绑定 键盘 code
+const keyCodes = {
+    esc: 27,
+    tab: 9,
+    enter: 13,
+    space: 32,
+    up: 38,
+    left: 37,
+    right: 39,
+    down: 40,
+    'delete': [8, 46]
+};
+
+// KeyboardEvent.key aliases
+// 键盘 健
+const keyNames = {
+    // #7880: IE11 and Edge use `Esc` for Escape key name.
+    esc: ['Esc', 'Escape'],
+    tab: 'Tab',
+    enter: 'Enter',
+    // #9112: IE11 uses `Spacebar` for Space key name.
+    space: [' ', 'Spacebar'],
+    // #7806: IE11 uses key names without `Arrow` prefix for arrow keys.
+    up: ['Up', 'ArrowUp'],
+    left: ['Left', 'ArrowLeft'],
+    right: ['Right', 'ArrowRight'],
+    down: ['Down', 'ArrowDown'],
+    // #9112: IE11 uses `Del` for Delete key name.
+    'delete': ['Backspace', 'Delete', 'Del']
+};
+
+// #4868: modifiers that prevent the execution of the listener
+// need to explicitly return null so that we can determine whether to remove
+// the listener for .once
+const genGuard = function (condition) { return ("if(" + condition + ")return null;"); };
+
+const modifierCode = {
+    stop: '$event.stopPropagation();',
+    prevent: '$event.preventDefault();',
+    self: genGuard("$event.target !== $event.currentTarget"),
+    ctrl: genGuard("!$event.ctrlKey"),
+    shift: genGuard("!$event.shiftKey"),
+    alt: genGuard("!$event.altKey"),
+    meta: genGuard("!$event.metaKey"),
+    left: genGuard("'button' in $event && $event.button !== 0"),
+    middle: genGuard("'button' in $event && $event.button !== 1"),
+    right: genGuard("'button' in $event && $event.button !== 2")
+};
+
 //这难道是 v-on ？
 function on( el,dir ){
     console.log('this on')
@@ -21,7 +76,7 @@ function on( el,dir ){
 function bind( el,dir ){
     console.log('this bind')
     el.wrapData = code => `_b(${code},'${el.tag}',${dir.value},${ dir.modifiers && dir.modifiers.prop ? 'true' : 'false' } ${ dir.modifiers && dir.modifiers.sync ? 'true' :'' })`
-    //{return ("_b(" + code + ",'" + (el.tag) + "'," + (dir.value) + "," + (dir.modifiers && dir.modifiers.prop ? 'true' : 'false') + (dir.modifiers && dir.modifiers.sync ? ',true' : '') + ")")}
+    // el.wrapData = function(code){return ("_b(" + code + ",'" + (el.tag) + "'," + (dir.value) + "," + (dir.modifiers && dir.modifiers.prop ? 'true' : 'false') + (dir.modifiers && dir.modifiers.sync ? ',true' : '') + ")")}
 }
 
 
@@ -31,6 +86,8 @@ const baseDirectives = {
     cloak : noop
 }
 
+
+
 const CodegenState = function CodegenState(options){
     this.options = options;
     //warn 直接写了 没有封装
@@ -39,7 +96,7 @@ const CodegenState = function CodegenState(options){
     this.transforms = pluckModuleFunction(options.modules,'transformCode')
     //src/compiler/modules/class.js 终于来了
     this.dataGenFns = pluckModuleFunction(options.modules,'genData')
-    //自定义指令
+    //自定义指令 v-model
     this.directives = extend( extend({},baseDirectives),options.directives )
     //tag
     const isReservedTag = options.isReservedTag || no
@@ -56,9 +113,12 @@ export default function generate( ast,options ){
     let state = new CodegenState(options)
     let code = ast ? genElement( ast,state ) : '_c("div")'
 
+    //简单来说 标签里面有v-once 的都放到 staticRenderFns
+    //没有的放到 render里面
     return {
         //vue2 用 with(this)
         render : ("with(this){return "+ code +"}"),
+        //每当 里面有 v-once 的时候 里面就多一段
         staticRenderFns : state.staticRenderFns
     }
 }
@@ -66,9 +126,8 @@ export default function generate( ast,options ){
 // options 是上面 CodegenState 生成的 跟 parse/optimize 不一样
 function genElement( el,state ){
     //正常情况是没有的 如果有的话 就相当于是 v-pre 了
-    //todo 哪种时候不知道
+    //递归 children 里面的元素的时候 就会有 parent
     if( el.parent ){
-        console.log('hoho 有了 el.parent----->',el.parent)
         el.pre = el.pre || el.parent.pre
     }
 
@@ -128,10 +187,19 @@ function genElement( el,state ){
                 //这个NB了
                 data = genData(el,state)
             }
-        }
-        console.log(11)
-    }
 
+            //这是终于想起了 还有子节点啊
+            //genChildren 递归子节点
+            let children = el.inlineTemplate ? null : genChildren(el, state, true)
+            code = "_c('" + (el.tag) + "'" + (data ? ("," + data) : '') + (children ? ("," + children) : '') + ")"
+            // console.log('code ----------->',code)
+        }
+
+        for (let i = 0; i < state.transforms.length ; i++) {
+            code = state.transforms[i](el,code)
+        }
+        return code
+    }
 }
 
 //静态根节点
@@ -147,7 +215,7 @@ function genStatic( el,state ){
     }
     state.staticRenderFns.push( `with(this){ return ${genElement(el,state)} }` )
     state.pre = originalPreState
-    // todo 怎么可能会有 staticInFor
+    // 通过递归children 判断子节点是否有 for staticInFor
     return ("_m("+ ( state.staticRenderFns.length -1 ) + ( el.staticInFor ? ',true' : '') +")")
 }
 
@@ -223,7 +291,8 @@ function genData( el,state ){
 
     // directives first.
     // directives may mutate the el's other properties before they are generated.
-    // 优先自定义指令
+    // 优先自定义指令 <input type="text" v-model="msg" /> v-model
+    // 用 directives 包裹
     let dirs = genDirectives(el,state)
     if( dirs ){
         data += dirs + ','
@@ -272,14 +341,67 @@ function genData( el,state ){
         // data += "domProps:" + (genProps(el.props)) + ",";
     }
 
-    // event handlers
-    /**
-     * v-on
-     */
+    /*
+       又用到了 parse.js addHandler
+    *  modifiers 几种情况                                           dynamic         events
+    *       v-on:click.prevent   {prevent: true}                    true
+    *       v-on:[click.prevent]   undefined                        true
+    *       v-on:click  undefined                                   false           false
+    *       v-on:[click,dd]或者v-on:[click]   undefined              true
+    * */
+    //todo 真复杂
     if (el.events) {
         data += (genHandlers(el.events, false)) + ",";
     }
-    console.log(data)
+    if (el.nativeEvents) {
+        data += (genHandlers(el.nativeEvents, true)) + ",";
+    }
+    // slot target
+    // only for non-scoped slots
+    if (el.slotTarget && !el.slotScope) {
+        console.log('el.slotTarget && !el.slotScope')
+        // data += "slot:" + (el.slotTarget) + ",";
+    }
+
+    // scoped slots
+    if (el.scopedSlots) {
+        console.log('el.scopedSlots')
+        // data += (genScopedSlots(el, el.scopedSlots, state)) + ",";
+    }
+    // component v-model
+    if (el.model) {
+        data += "model:{value:" + (el.model.value) + ",callback:" + (el.model.callback) + ",expression:" + (el.model.expression) + "},";
+    }
+    // inline-template
+    if (el.inlineTemplate) {
+        console.log('el.inlineTemplate')
+        // var inlineTemplate = genInlineTemplate(el, state);
+        // if (inlineTemplate) {
+        //     data += inlineTemplate + ",";
+        // }
+    }
+
+    data = data.replace(/,$/, '') + '}';
+
+    // v-bind dynamic argument wrap
+    // v-bind with dynamic arguments must be applied using the same v-bind object
+    // merge helper so that class/style/mustUseProp attrs are handled correctly.
+    if (el.dynamicAttrs) {
+        console.log('el.dynamicAttrs')
+        // data = "_b(" + data + ",\"" + (el.tag) + "\"," + (genProps(el.dynamicAttrs)) + ")";
+    }
+    // v-bind data wrap
+    if (el.wrapData) {
+        console.log('el.wrapData')
+        // data = el.wrapData(data);
+    }
+
+    // v-on data wrap
+    if (el.wrapListeners) {
+        console.log('el.wrapListeners')
+        // data = el.wrapListeners(data);
+    }
+
     return data
 }
 
@@ -289,7 +411,71 @@ function genDirectives( el,state ){
     if( !dirs ){
         return
     }
-    console.log('走到自定义指令了再回来写上')
+    /**
+     <input type="text" id="input" class="input" name="input" value="这是默认值"  v-model="msg" />
+     dirs:
+         {
+            arg: false,
+            isDynamicArg: undefined,
+            modifiers:{
+                end: 199,
+                name: "v-model",
+                start: 186,
+                value: "msg",
+            },
+            name: "model",
+            rawName: "msg",
+            value: "msg",
+        }
+     */
+    let res = 'directives:['
+    let hasRuntime = false
+    let i,l,dir,needRuntime
+    for (i = 0; i < dirs.length; i++) {
+        /**
+         * dir：
+             arg: false
+             isDynamicArg: undefined
+             modifiers: {name: "v-model", value: "msg", start: 238, end: 252}
+             name: "model"
+             rawName: "msg"
+             value: "msg"
+         */
+        dir = dirs[i]
+        needRuntime = true
+        let gen = state.directives[dir.name]
+        if( gen ){
+            // compile-time directive that manipulates AST.
+            // returns true if it also needs a runtime counterpart.
+            //跑到  directives/model.js 里面了 v-model 挂载
+            needRuntime = !!gen(el,dir)
+        }
+        if( needRuntime ){
+            hasRuntime = true
+            res += "{name:\"" +
+                (dir.name) +
+                "\",rawName:\"" +
+                (dir.rawName) + "\"" +
+                (
+                    dir.value
+                        ? (",value:(" + (dir.value) + "),expression:" + (JSON.stringify(dir.value)))
+                        : ''
+                ) +
+                (dir.arg
+                    ? (",arg:" + (dir.isDynamicArg ? dir.arg : ("\"" + (dir.arg) + "\"")))
+                    : ''
+                ) +
+                (
+                    dir.modifiers
+                        ? (",modifiers:" + (JSON.stringify(dir.modifiers)))
+                        : ''
+                ) +
+                "},";
+        }
+    }
+    if( hasRuntime ){
+        return res.slice(0, -1) + ']'
+    }
 }
 
 /**
@@ -329,18 +515,270 @@ function transformSpecialNewlines (text) {
 }
 
 function genHandlers( events,isNative ){
-    console.log(events,isNative)
+    let prefix = isNative ? 'nativeOn' : 'on:'
+    let staticHandlers = ''
+    let dynamicHandlers = ''
+    /*
+       又用到了 parse.js addHandler
+    *  modifiers 几种情况                                           dynamic         name                modifiers
+    *       v-on:click.prevent   {prevent: true}                    true           click               {prevent: true}
+    *       v-on:[click.prevent]   undefined                        true           click.prevent        undefined
+    *       v-on:click  undefined                                   false          click                undefined
+    *       v-on:[click,dd]或者v-on:[click]   undefined              true          click,dd/click       undefined
+    * */
+    for (let name in events) {
+        let handlerCode = genHandler(events[name])
+        if (events[name] && events[name].dynamic) {
+            dynamicHandlers += name + "," + handlerCode + ",";
+        } else {
+            staticHandlers += "\"" + name + "\":" + handlerCode + ",";
+        }
+    }
+
+    staticHandlers = "{" + (staticHandlers.slice(0, -1)) + "}";
+    if (dynamicHandlers) {
+        return prefix + "_d(" + staticHandlers + ",[" + (dynamicHandlers.slice(0, -1)) + "])"
+    } else {
+        return prefix + staticHandlers
+    }
 }
 
+//动手敲下总比拷贝的好
+//{value: "show", dynamic: true, start: 27, end: 54}
+function genHandler( handler ){
+    if( !handler ){
+        return 'function(){}'
+    }
 
+    if( Array.isArray(handler) ){
+        return ("[" + (handler.map(function (handler) { return genHandler(handler); }).join(',')) + "]")
+    }
 
+    let isMethodPath = simplePathRE.test(handler.value)
+    let isFunctionExpression = fnExpRE.test(handler.value);
+    let isFunctionInvocation = simplePathRE.test(handler.value.replace(fnInvokeRE, ''));
 
+    //@click="[tag,ss]"
+    if( !handler.modifiers ){
+        if( isMethodPath || isFunctionExpression ){
+            return handler.value
+        }
+        // function($event){[tag]}
+        let ret = ("function($event){" + (isFunctionInvocation ? ("return " + (handler.value)) : handler.value) + "}")
+        // console.warn(ret)
+        return ret
+    }else{
+        let code = ''
+        let genModifierCode =''
+        let keys=[]
+        for (let key in handler.modifiers) {
+            if( genModifierCode[key] ){
+                genModifierCode += modifierCode[key];
+                // left/right
+                if (keyCodes[key]) {
+                    keys.push(key);
+                }
 
+            } else if (key === 'exact') {
+                let modifiers = (handler.modifiers);
+                genModifierCode += genGuard(
+                    ['ctrl', 'shift', 'alt', 'meta']
+                        .filter(function (keyModifier) { return !modifiers[keyModifier]; })
+                        .map(function (keyModifier) { return ("$event." + keyModifier + "Key"); })
+                        .join('||')
+                );
+            }else{
+                keys.push(key);
+            }
+        }
+        //{prevent: true}  ["prevent"]
+        // console.warn(keys)
+        if (keys.length) {
+            code += genKeyFilter(keys);
+        }
+        // Make sure modifiers like prevent and stop get executed after key filtering
+        if (genModifierCode) {
+            code += genModifierCode;
+        }
+        let handlerCode = isMethodPath
+            ? ("return " + (handler.value) + "($event)")
+            : isFunctionExpression
+                ? ("return (" + (handler.value) + ")($event)")
+                : isFunctionInvocation
+                    ? ("return " + (handler.value))
+                    : handler.value;
+        return ("function($event){" + code + handlerCode + "}")
+    }
+}
 
+function genKeyFilter (keys) {
+    return (
+        // make sure the key filters only apply to KeyboardEvents
+        // #9441: can't use 'keyCode' in $event because Chrome autofill fires fake
+        // key events that do not have keyCode property...
+        "if(!$event.type.indexOf('key')&&" +
+        (keys.map(genFilterCode).join('&&')) + ")return null;"
+    )
+}
 
+function genFilterCode (key) {
+    let keyVal = parseInt(key, 10);
+    if (keyVal) {
+        return ("$event.keyCode!==" + keyVal)
+    }
+    let keyCode = keyCodes[key];
+    let keyName = keyNames[key];
+    return (
+        "_k($event.keyCode," +
+        (JSON.stringify(key)) + "," +
+        (JSON.stringify(keyCode)) + "," +
+        "$event.key," +
+        "" + (JSON.stringify(keyName)) +
+        ")"
+    )
+}
 
+//递归了
+function genChildren( el,state,checkSkip,altGenElement,altGenNode ){
+    //拿到子节点吧
+    let children = el.children
+    if( children.length ){
+        let childEl = children[0]
+        /**
+             <div id="main" v title="1" class="main" style="background: red;border: 1px solid red;" >
+                 <div class="top" v-for="item in 10">
+                    这是一段正常的文字br
+                 </div>
+             </div>
+             这么一段结构
 
+             if options.whitespace = condense children.length =1
+             else children.length = 2
+         */
+        if( children.length === 1 && childEl.for && childEl.tag !== 'template' && childEl.tag !== 'slot' ){
+            // checkSkip 还有其他用到这里了 genElement() else 里面默认传的 true
+            let normalizationType = checkSkip
+                // maybeComponent tag 或者 component
+                ? state.maybeComponent(childEl) ? ',1' : ',0'
+                : ''
+            return (
+                "" +
+                (
+                    (altGenElement || genElement)(childEl, state)
+                ) +
+                normalizationType
+            )
+        }
+        let normalizationType$1 = checkSkip
+            ? genNormalizationType(children,state.maybeComponent)
+            : 0
+        //genNode node 节点 类型
+        let gen = altGenNode || genNode
 
+        return (
+            "[" +
+                (
+                    children.map(
+                        c => gen(c,state)
+                    )
+                ).join(',') +
+            "]" +
+            (
+                normalizationType$1
+                    ? ("," + normalizationType$1)
+                    : ''
+            )
+        )
+    }
+}
+
+// determine the normalization needed for the children array.
+// 0: no normalization needed
+// 1: simple normalization needed (possible 1-level deep nested array)
+// 2: full normalization needed
+/**
+     <div id="main" title="1" class="main" style="background: red;border: 1px solid red;" >
+         <div class="top" v-for="item in 10">
+            这是一段正常的文字br
+         </div>
+     </div>
+    在这个结构下 children 是
+    [ {type: 3, text: " 这是一段正常的文字br ", start: 127, end: 152, static: true} ]
+ */
+function genNormalizationType( children,maybeComponent ) {
+    let res = 0
+    for (let i = 0; i < children.length ; i++) {
+        let el = children[i]
+        if( el.type !== 1 ){
+            continue
+        }
+        /**
+             方法用于检测数组中的元素是否满足指定条件
+             some() 方法会依次执行数组的每个元素：
+
+             如果有一个元素满足条件，则表达式返回true , 剩余的元素不会再执行检测。
+             如果没有满足条件的元素，则返回false。
+             注意： some() 不会对空数组进行检测。
+
+             注意： some() 不会改变原始数组。
+         */
+        if( needsNormalization(el) || ( el.ifConditions && el.ifConditions.some(c=>{ needsNormalization(c.block) }) ) ){
+            /**
+             <select id="input" class="input" name="input" value="这是默认值" v-if="1" v-on:click="tag"  v-model="msg" v-for="item in 10">
+                <option>dd</option>
+             </select>
+             */
+            res = 2
+            break
+        }
+        if( maybeComponent(el) || ( el.ifConditions && el.ifConditions.some( c=> maybeComponent(c.block) ) ) ){
+            console.warn('genNormalizationType------->走到这儿了')
+            res = 1
+        }
+    }
+    return res
+}
+
+function needsNormalization( el ){
+    return el.for !== undefined || el.tag === 'template' || el.tag === 'slot'
+}
+
+//这不是 node 节点的类型
+function genNode (node, state) {
+    if (node.type === 1) {  //节点
+        return genElement(node, state)
+    } else if (node.type === 3 && node.isComment) {
+        // node
+        // {
+        //     end: 376,
+        //     isComment: true,
+        //     start: 361,
+        //     static: true,
+        //     text: " 这是一段注释 ",
+        //     type: 3
+        // }
+        return genComment(node)
+    } else {
+        // 文本
+        return genText(node)
+    }
+}
+
+function genComment (comment) {
+    return ("_e(" + (JSON.stringify(comment.text)) + ")")
+}
+
+function genText (text) {
+    return (
+        "_v(" +
+            (
+                text.type === 2
+                    ? text.expression // no need for () because already wrapped in _s()
+                    : transformSpecialNewlines(JSON.stringify(text.text))
+            ) +
+        ")"
+    )
+}
 
 
 

@@ -1,6 +1,10 @@
 
 import parseFilters from './parse/filter-parser.js'
 
+//冻结的值 热然可以将变量的引用替换掉
+//冻结数据 纯展示大数据 都可以使用 Object.freeze 提高性能
+const emptyObject = Object.freeze({})
+
 // note: this only removes the attr from the Array (attrsList) so that it
 // doesn't get processed by processAttrs.
 // By default it does NOT remove it from the map (attrsMap) because the map is
@@ -125,6 +129,101 @@ function pluckModuleFunction (modules,key){
         : []
 }
 
+/**
+ * @param el              整个节点
+ * @param name            类似 click
+ * @param value           click=value
+ * @param modifiers
+ * @param important
+ * @param range           单个节点
+ * @param dynamic
+ * **/
+//click 绑定的事件 修饰符
+function addHandler(el,name,value,modifiers,important,range,dynamic){
+    /*
+    *  modifiers 几种情况                                           dynamic
+    *       v-on:click.prevent   {prevent: true}                    true
+    *       v-on:[click.prevent]   undefined                        true
+    *       v-on:click  undefined                                   false
+    *       v-on:[click,dd]或者v-on:[click]   undefined              true
+    * */
+    modifiers = modifiers || emptyObject
+    if( modifiers.prevent && modifiers.passive ){
+        console.warn(`passive and prevent can't be used together. Passive handler can't prevent default event`)
+    }
+
+    // normalize click.right and click.middle since they don't actually fire
+    // this is technically browser-specific, but at least for now browsers are
+    // the only target envs that have right/middle clicks.
+    //右键
+    //click.right
+    if( modifiers.right ){
+        if( dynamic ){
+            name = `(${name})==='click'?'contextmenu':(${name})`
+        }else if(name === 'click'){
+            name = 'contextmenu'
+            delete modifiers.right
+        }
+    }else if( modifiers.middle ){
+        //click.middle
+        //滚轮
+        if( dynamic ){
+            name = `(${name}) === 'click'?'mouseup':(${name})`
+        }else if(name === 'click'){
+            name = 'mouseup'
+        }
+    }
+    //click.capture 冒泡排序
+    if( modifiers.capture){
+        delete modifiers.capture
+        //name -> !click 或者 _p(click,!)
+        name = prependModifierMarker('!',name,dynamic)
+    }
+
+    //click.once
+    if( modifiers.once ){
+        delete modifiers.once
+        name = prependModifierMarker('~',name,dynamic)
+    }
+    //istanbul ignore if
+    //click.passive 执行默认方法
+    if( modifiers.passive ){
+        delete modifiers.passive
+        name = prependModifierMarker('&',name,dynamic)
+    }
+
+    let events;
+    //click.native  父组件中给子组件绑定一个原生的事件 将子组件变成了普通的html标签
+    //将vue组件转为普通的html标签，并且对普通html标签没有任何作用
+    if( modifiers.native ){
+        delete modifiers.native
+        events = el.nativeEvents || (el.nativeEvents={})
+    }else{
+        events = el.events || (el.events = {})
+    }
+    //将click事件对应的名称 添加 start end
+    let newHandler = rangeSetItem({
+        value:value.trim(),
+        dynamic
+    },range)
+
+    //冻结
+    if( modifiers !== emptyObject ){
+        newHandler.modifiers = modifiers
+    }
+
+    let handlers = events[name]
+    if(Array.isArray(handlers)){
+        important ? handlers.unshift(newHandler) : handlers.push(newHandler);
+    }else if(handlers){
+        events[name] = important ? [newHandler, handlers] : [handlers, newHandler];
+    }else{
+        events[name] = newHandler
+    }
+
+    el.plain = false
+}
+
 
 export {
     getAndRemoveAttr,
@@ -135,5 +234,6 @@ export {
     makeMap,
     addProp,
     addRawAttr,
-    pluckModuleFunction
+    pluckModuleFunction,
+    addHandler
 }
