@@ -1,5 +1,10 @@
 # 第五步 template模版转为ast 
 
+## 修复
+    
+    1、parse.js addDirective() 传参的时候漏掉了一个 rawName
+
+---------
     保留之前分支 template-ast ，停止维护，那个分支 没有 options 
     这个分支添加了 options 
     还有一个很重要的东西 options.whitespace 两种模式

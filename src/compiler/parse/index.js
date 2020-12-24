@@ -867,7 +867,8 @@ function processAttrs(el){
                     }
                 }
                 //directives 自定义指令相关的 东西
-                addDirective(el,name,value,arg,isDynamic,modifiers,list[i])
+                //重大事故
+                addDirective(el,name,rawName,value,arg,isDynamic,modifiers,list[i])
                 //v-model 跟 v-for 不能同时使用 检查 v-model
                 if( name === 'model' ){
                     checkForAliasModel(el,value)
