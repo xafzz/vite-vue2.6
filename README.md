@@ -1,5 +1,7 @@
 # 第四步 compile-options相关
 
+###### new Vue的时候也有options，所以改为compile-options恰当
+
 ###### 源码：vue/src/platforms/web/compiler/options.js
 
     这个还是需要单独写一写，因为在compile过程都用到了
