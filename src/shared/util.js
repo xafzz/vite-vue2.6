@@ -1,3 +1,4 @@
+import { makeMap } from "../compiler/helpers.js";
 
 /**
  * Always return false.
@@ -26,6 +27,11 @@ function extend(el,_form){
     }
     return el
 }
+
+/**
+ * Check if a tag is a built-in tag.
+ */
+export const isBuiltInTag = makeMap('slot,component', true)
 
 export {
     no,

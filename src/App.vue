@@ -9,7 +9,7 @@
         </div>
         <!-- 这是一段注释 -->
         <div class="center" v-for="(item,key) in 10" :key="key">
-            <p>{{ msg }}</p>
+            <p>{{ msg }},{{ changeComputed }}</p>
         </div>
         <div class="v-once" v-once >
             v-once
@@ -35,8 +35,53 @@ export default {
             cla:'class'
         }
     },
+    beforeCreate() {
+        console.log('beforeCreate')
+    },
+    created() {
+        console.log('created')
+    },
+    beforeMount() {
+        console.log('beforeMount')
+    },
+    mounted() {
+        console.log('mounted')
+    },
+    beforeUpdate() {
+        console.log('beforeUpdate')
+    },
+    updated() {
+        console.log('updated')
+    },
+    activated(){
+        console.log('activated')
+    },
+    deactivated() {
+        console.log('deactivated')
+    },
+    beforeDestroy() {
+        console.log('beforeDestroy')
+    },
+    destroyed() {
+        console.log('destroyed')
+    },
+    errorCaptured(err, vm, info) {
+        console.log('errorCaptured')
+    },
+    watch:{
+        show(){
+            console.log('show is change')
+        }
+    },
+    computed:{
+        changeComputed(){
+            return this.msg * 2
+        }
+    },
     methods:{
         tag(){
+            this.show = !this.show
+            this.msg += 1
             console.log(11)
         }
     }
