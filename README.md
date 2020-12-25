@@ -1,7 +1,6 @@
-# 第四步 options相关
+# 第四步 compile-options相关
 
 ###### 源码：vue/src/platforms/web/compiler/options.js
-###### 共有10属性，用到的时候具体回来在补上
 
     这个还是需要单独写一写，因为在compile过程都用到了
 
@@ -11,7 +10,7 @@
 
 
 ## modules
-    
+
     没有直接按源码敲一遍，后面用到到时候 在回来补上
     包括 class、model、style
 
@@ -31,9 +30,9 @@
         'area,base,br,col,embed,frame,hr,img,input,isindex,keygen,' +
         'link,meta,param,source,track,wbr'
     )
-    
+
 ## mustUseProp
-    
+
     mustUseProp = (tag, type, attr) =>{
         return (
             ( attr === 'value' && acceptValue(tag)) && type !== 'button' ||
@@ -50,12 +49,12 @@
     )
 
 ## isReservedTag
-    
+
     在optimize打静态标记的时候 用到了
     isReservedTag = (tag) => isHTMLTag(tag) || isSVG(tag)
 
 ## getTagNamespace
-    
+
     if( isSVG(tag) ){
         return 'svg'
     }
@@ -65,6 +64,6 @@
     }
 
 ## staticKeys
-    
+
     静态标记的时候 也用到了
     reduce() 方法接收一个函数作为累加器，数组中的每个值（从左到右）开始缩减，最终计算为一个值。
