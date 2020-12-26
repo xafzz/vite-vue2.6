@@ -11,7 +11,7 @@ Vue.prototype.$mount = function(el,hydrating){
 
     el =el && inBrowser ? query(el) : undefined
 
-    // return mountComponent(this,el,hydrating)
+    return mountComponent(this,el,hydrating)
 }
 
 export default Vue

@@ -25,6 +25,7 @@ export function initMixin( Vue ){
         }
 
         //避免被观察到到一个标志
+        //如果是Vue的实例，则不需要被observe todo 为什么 不需要？
         vm._isVue = true
         //合并 options
         // _isComponent 没有传啊
@@ -35,22 +36,46 @@ export function initMixin( Vue ){
             console.log('options._isComponent------->',options._isComponent)
         }else{
             // 这是不是拿data里面的东西啊
-            //找到你了 $options
+            // 找到你了 $options
+            // 问题 resolveConstructorOptions( vm.constructor ) 是 undefined 但是 源码里面是有值的
+            // 源码能注释的都注释了，是不是core/core.js 少写了什么
+            //$options 包含了当前组件中所有用到生命周期，data，watch，computed以及 过滤器 组件 自定义指令
             vm.$options = mergeOptions(
+                //global-api/index.js->initGlobalAPI 终于不再是undefined了
                 resolveConstructorOptions( vm.constructor ),
                 options || {},
                 vm
             )
-            console.log('vm.$options----->',vm.$options,resolveConstructorOptions( vm.constructor ))
-            console.log('vm.constructor----->',vm.constructor)
         }
 
+        //为什么要加这一句呢
+        /*
+            写法一：
+            const app = new Vue({
+                render:h=>h(App)
+            })
+            app.$mount("#app")
+            写法二:
+            new Vue({
+                el:'#app',
+                components:{ App }
+            })
+
+            有这么2种写法
+            写法一直接 挂载到了 $mount 上，写法二没有直接 $mount ，所以 需要单独在执行下
+            问题：
+            写法一目前 vm.$options 上 vm.$options.el = undefined
+
+         */
+        if( vm.$options.el ){
+            vm.$mount(vm.$options.el)
+        }
     }
 }
 
 export function resolveConstructorOptions( Ctor ){
-    //undefined
     let options = Ctor.options
+    //首先需要判断该类是否是Vue的子类
     if( Ctor.super ){
 
         console.log('options-------->',options,'Ctor.super---------->',Ctor.super)

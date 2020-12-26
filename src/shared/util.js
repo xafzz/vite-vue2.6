@@ -1,5 +1,7 @@
 import { makeMap } from "../compiler/helpers.js";
 
+//附录/shared/util.js 文件工具方法全解
+//http://caibaojian.com/vue-design/appendix/shared-util.html
 /**
  * Always return false.
  */
@@ -33,9 +35,20 @@ function extend(el,_form){
  */
 export const isBuiltInTag = makeMap('slot,component', true)
 
+
+/**
+ * Check whether an object has the property.
+ * 检查对象 obj 是否具有属性值key
+ */
+const hasOwnProperty = Object.prototype.hasOwnProperty
+function hasOwn (obj, key) {
+    return hasOwnProperty.call(obj, key)
+}
+
 export {
     no,
     noop,
     genStaticKeys,
-    extend
+    extend,
+    hasOwn
 }

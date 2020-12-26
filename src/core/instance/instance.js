@@ -4,6 +4,8 @@ function Vue(options){
     //编译的时候 将 template跟options放到文件里面
     let __template = options.App.template
     let __options = options.App.script
+    //template 挂载到 options
+    __options.template = __template
     //
     if( options.el ){
         __options.el = options.el

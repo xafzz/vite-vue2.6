@@ -61,7 +61,8 @@ export default function parseHTML(html,options){
                 if( comment.test(html) ){
                     // 拿到结尾的位置
                     let commentEnd = html.indexOf('-->')
-                    if( commentEnd > 0 ){
+                    //还把0吃了没发现
+                    if( commentEnd >= 0 ){
                         // console.log(commentEnd)
                         //这还有一个判断 因为没有设置options 暂时跳过
                         //html是剩余的内容 并且进到这里已经是注释的 部分
