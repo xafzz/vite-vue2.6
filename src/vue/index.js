@@ -2,8 +2,8 @@
 
 import Vue from '../runtime/runtime.js'
 import {compileToFunctions} from "../compiler/compile.js";
-import {query} from "../util/index.js";
-import config from "../core/config.js";
+import {query} from '@/util'
+import config from '@/core/config'
 //性能 todo 怎么看
 import {mark,measure} from "../core/util/perf.js";
 import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from "../util/compat.js";
