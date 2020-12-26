@@ -3,12 +3,9 @@ const path = require('path')
 const fs = require('fs')
 //热更新
 const chokidar = require('chokidar')
-
 const vueTemplateCompiler = require('vue-template-compiler')
-
 //端口号
 const port = 9000
-
 const app =new koa()
 
 /**
@@ -28,7 +25,6 @@ function writeImport(content,initUrl){
         if( s1[0] !=='.' && s1[0] !=='/' ){
             return ` from '/@module/${s1}'`
         }else if( s1[0] === '.' && s1[1] === '/' ){     // ./
-            // console.log('-------->s0,s1',s0,'<------>',s1,'---->',initUrl,'s1[0]->',s1[0],'s1[1]->',s1[1],` from '${initUrl.replace('src','@module')}${s1.slice(1)}'`)
             return ` from '${initUrl.replace('src','@module')}${s1.slice(1)}'`
         }else if( s1[0] === '.' && s1[1] === '.' && s1[2] === '/' ){     // ../
             //这个应该正则出来 可能会有../../ 但是这种情况 就用 @ 代替了
@@ -36,17 +32,12 @@ function writeImport(content,initUrl){
             let s1Arr = s1.split('..\/')
             // 源码里面用到了很多 不如实际情况自己用一次
             s1Arr = s1Arr.filter( n => n )
-            // console.log(initUrl,'----->',s1Arr.join('\/'))
             //当存在 ../ 的时候 都是从 src 下面 开始的
-            // return ` from '${initUrl.replace('src','@module')}/${s1Arr.join('\/')}'`
-            /////////////
             //根据 ../ 个数
             let numArr = s1.match(/\.\.\//g)
             //将当前路径 分成数组
             let pathArr = initUrl.split('\/')
-
             if( numArr.length > pathArr.length ){
-
                 console.log('\033[41;30m Error \033[41;37m not found \033[40;33m '+initUrl+ s1 +' \033[0m')
             }else{
                 //不去空
@@ -71,15 +62,12 @@ function resolveExtensions(url){
         //是否包含后缀名 文件名不包含 .
         let arr = url.split('.')
         //有 . 就认为是有后缀名的
-        // console.log('first----->url:',url,arr.length,arr)arr
         if( arr.length === 1 ){
             //
             //里面只有@module 而不是 @module/@/的时候
             if( new RegExp(isOnlyModel).test(url) ){
                 url=url.replace(isOnlyModel,'/')
             }
-
-            let file
             /*
                 fs.stat 异步
                 fs.stat(src + url,(err,data)=>{
@@ -88,17 +76,16 @@ function resolveExtensions(url){
                         //直接匹配 index.js  或者 index.vue
                         isExists( url,'/index' )
                     }else{
-                        console.log(11)
                         isExists( url )
                     }
                 })
             */
+            let file
             try {
                 file='/index'
                 //文件夹
                 fs.statSync(src + url)
                 isExists( url,file )
-                // console.log('second----->url:',url,pathObject[url])url
             }catch (e) {
                 file=''
                 //非文件夹
@@ -116,13 +103,9 @@ function resolveExtensions(url){
                     console.log('\033[41;30m Error \033[41;37m not found \033[40;33m src'+url+file+'.js 或 src'+url+file+'.vue \033[0m')
                     break
             }
-            // console.log('four------>url:',url,path.resolve(__dirname, url.slice(1)))
         }else{
-            // url = '/src/'+url
             //处理过一次了啊？
-            // console.log('three------>url:',url,path.resolve(__dirname, url.slice(1)))
             url = url.replace(/^\/@module\//,'/src/')
-            // console.log(url)
         }
     }
     return url
@@ -149,7 +132,7 @@ function isExists( url,file ) {
 app.use(async (ctx,next)=>{
     let { url,type } =ctx
     let initUrl = url
-    //todo 每次都走了 这个地方可以 搞个缓存 只有添加文件的时候 过一遍路径 其他情况直接就好了
+    //todo 还有优化的空间
     url = resolveExtensions(url)
     if( url === '/' ){
         let content = fs.readFileSync('./index.html','utf-8')
@@ -169,9 +152,7 @@ app.use(async (ctx,next)=>{
             let initUrlArr=url.split('\/')
             initUrlArr.pop()
             newUrl = initUrlArr.join('\/')
-            // console.log('---------->',initUrlArr,newUrl)
         }catch (e) {
-            console.warn('------->',initUrl)
             newUrl = initUrl
         }
         ctx.type = 'application/javascript'
@@ -192,7 +173,6 @@ app.use(async (ctx,next)=>{
         //看看走到哪儿了 node_modules/vue-template-compiler/build.js:336:33
         // let content = fs.readFileSync(p)
         let parseContent = vueTemplateCompiler.parseComponent(content)
-        // console.log(parseContent)
 
         ctx.type = 'application/javascript'
         ctx.body = `
@@ -264,5 +244,6 @@ watcher.on('change',(path)=>{
     })
 }).on('add',(path)=>{
     // console.log('add->',path)
+    //
 })
 
