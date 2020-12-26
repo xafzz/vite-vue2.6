@@ -12,7 +12,8 @@
     
 ##### mergeOptions
 
-    合并options
+    合并options,默认策略
+        优先组件内的属性
 
 ### initGlobalAPI 全局API
 
