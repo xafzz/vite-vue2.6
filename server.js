@@ -8,6 +8,13 @@ const vueTemplateCompiler = require('vue-template-compiler')
 const port = 9000
 const app =new koa()
 
+// @ 表示 src/ 定义了根目录 这不能动
+//这个可以是通过配置进来的，然后通过正则 得到根目录名称
+const staticRoot = 'src'
+const src = path.resolve(__dirname,staticRoot)
+const pathObject = Object.create(null)
+//里面只有@module 而不是 @module/@/的时候
+const isOnlyModel = '/@module/'
 /**
  *  @/vue     ./vue/index.js
  *  @vue        ./vue/index.js
@@ -15,125 +22,182 @@ const app =new koa()
  */
 //有一些是从node_modules 里面来的 要转成 @module
 const isFit = new RegExp('@')
+//只有英文字母跟点 必须是开头
+const isOnlyLetter = /^([a-zA-Z]+)(\.)?([a-zA-Z]+)?$/
+//是否有2个点 必须是开头  ./../ | ../ | /../
+const isDoubleSpot = /^(\.\/\.\.\/|\.\.\/|\/\.\.\/)/
+//开头包含 ./ /
+const isSlashSpot = /^(\.\/|\/)/
+
+//处理路径
 function writeImport(content,initUrl){
     return content.replace(/ from ['|"]([^'"]+)['|"]/g,(s0,s1)=>{
-        //当有 @ 存在当时候
-        if( isFit.test(s1) ){
-            s1 = s1.replace(/@(\/)?/,'@/')
-        }
-
-        if( s1[0] !=='.' && s1[0] !=='/' ){
-            return ` from '/@module/${s1}'`
-        }else if( s1[0] === '.' && s1[1] === '/' ){     // ./
-            return ` from '${initUrl.replace('src','@module')}${s1.slice(1)}'`
-        }else if( s1[0] === '.' && s1[1] === '.' && s1[2] === '/' ){     // ../
-            //这个应该正则出来 可能会有../../ 但是这种情况 就用 @ 代替了
-            //只要存在 ../ 且 不管有多少 ../
-            let s1Arr = s1.split('..\/')
-            // 源码里面用到了很多 不如实际情况自己用一次
-            s1Arr = s1Arr.filter( n => n )
-            //当存在 ../ 的时候 都是从 src 下面 开始的
-            //根据 ../ 个数
-            let numArr = s1.match(/\.\.\//g)
-            //将当前路径 分成数组
-            let pathArr = initUrl.split('\/')
-            if( numArr.length > pathArr.length ){
-                console.log('\033[41;30m Error \033[41;37m not found \033[40;33m '+initUrl+ s1 +' \033[0m')
+        try {
+            let returnImport
+            //有没有 @ ，有 @
+            if( isFit.test( s1 ) ){
+                //这个简单 将 @替换了
+                // returnImport = ` from '${s1.replace(/^(\/ |\.\/)?@(\/)?/,'/@module/')}'`
+                returnImport = s1.replace(/^(\/ |\.\/)?@(\/)?/,'/@module/')
             }else{
-                //不去空
-                pathArr.splice(-numArr.length,numArr.length)
-                return ` from '${pathArr.join('\/')}/${s1Arr.join('\\/')}'`
+                /*
+                    App.vue
+
+                    /App.vue
+                    ./App.vue
+
+                    ../App.vue
+                    ./../App.vue
+                    ../App.vue
+                    /../App.vue
+                    ../../App.vue
+                 */
+                //App.vue
+                // 包含 ../ ,有种特殊情况  目录里面点
+                if( isDoubleSpot.test(s1) ){
+                    //需要先把 ./  /去掉 ,只剩下 ../xx 或者 ../../xxx
+                    let newS1 = s1.replace(isSlashSpot,'')
+                    //根据 ../ 切割 数组
+                    let newS1Arr = newS1.split('..\/')
+                    //获取 ../ 个数 需要将路径进行拼接 这里以 src 当作根目录
+                    let count = newS1.match(/\.\.\//g)
+                    //将数组 去空 得到最终数组
+                    // 源码里面用到了很多 不如实际情况自己用一次
+                    newS1Arr = newS1Arr.filter( n => n )
+                    //将当前路径 分成数组
+                    let pathArr = initUrl.split('\/')
+                    //去空一下 有可能 传过来的路径是 /xx 而不是 xx
+                    pathArr = pathArr.filter( n=>n )
+                    if( pathArr.length > count.length ){
+                        pathArr.splice(-count.length,count.length)
+                        let newImport = pathArr.join('\/')+ '/' +newS1Arr.join('\/')
+                        // returnImport = ` from '${newImport.replace('src','/@module')}'`
+                        returnImport = newImport.replace('src','/@module')
+                    }else{
+                        console.log('\033[41;30m Error \033[41;37m not found \033[40;33m '+initUrl+ s1 +' \033[0m')
+                    }
+                }else{
+                    //开头包含 ./ 或者 /
+                    if( isSlashSpot.test(s1) ){
+                        //这种情况 是当前路径下的地址 所以这个点 也要主要
+                        //如果是 src 下面的 就是 直接 @module
+                        //如果是子目录下面的 ./ 就需要包含当前的路径了
+                        //不着急替换成最终的 先进行拼接
+                        // s1 = s1.replace(isSlashSpot,'/@module/')
+                        s1 = initUrl + s1.replace(isSlashSpot,'/')
+
+                        // returnImport = ` from '${s1.replace(staticRoot,'@module')}'`
+                        returnImport = s1.replace(staticRoot,'@module')
+                    }else if( isOnlyLetter.test(s1) ){
+                        // returnImport = ` from '/@module/${s1}'`
+                        returnImport = `/@module/${s1}`
+                    }else{
+                        //其他点情况 都报错
+                        console.log('\033[41;30m Error \033[41;37m not found \033[40;33m '+ s0 +','+ s1 +' \033[0m')
+                    }
+                }
             }
-        } else{
-            return s0
+            //修改的时候 直接 输出
+            if( !confUrl.getUrl(returnImport) ){
+                confUrl.setUrl(returnImport)
+            }
+            return ` from '${returnImport}'`
+        }catch (e) {
+            //不要打印错误
         }
     })
 }
-// @ 表示 src/
-const src = path.resolve(__dirname,'src')
-const pathObject = Object.create(null)
-//里面只有@module 而不是 @module/@/的时候
-const isOnlyModel = '/@module/'
-function resolveExtensions(url){
-    //后面可以搞个单独的文件 这个文件里面的都是 .vue
-    if( url !== '/' && url !== '/src/main.js' ){
-        //判断是否有 @ ，有@ url 变为 /@module/@/
-        url = url.replace(/^\/@module\/@[\/]?/,'/')
-        //是否包含后缀名 文件名不包含 .
-        let arr = url.split('.')
-        //有 . 就认为是有后缀名的
-        if( arr.length === 1 ){
-            //
-            //里面只有@module 而不是 @module/@/的时候
-            if( new RegExp(isOnlyModel).test(url) ){
-                url=url.replace(isOnlyModel,'/')
-            }
-            /*
-                fs.stat 异步
-                fs.stat(src + url,(err,data)=>{
-                    //如果是文件夹
-                    if( data && data.isDirectory() && !data.isFile() ){
-                        //直接匹配 index.js  或者 index.vue
-                        isExists( url,'/index' )
-                    }else{
-                        isExists( url )
+//包一下
+function urlCache(){
+    let cached = {}
+    return {
+        setUrl:function (url){
+            let init = url
+            //后面可以搞个单独的文件 这个文件里面的都是 .vue
+            if( url !== '/' && url !== '/src/main.js' ){
+                //里面有@module
+                if( new RegExp(isOnlyModel).test(url) ){
+                    url=url.replace(isOnlyModel,'/')
+                }
+                //是否包含后缀名 文件名不包含 .
+                let arr = url.split('.')
+                //有 . 就认为是有后缀名的
+                if( arr.length === 1 ){
+                    /*
+                        fs.stat 异步
+                        fs.stat(src + url,(err,data)=>{
+                            //如果是文件夹
+                            if( data && data.isDirectory() && !data.isFile() ){
+                                //直接匹配 index.js  或者 index.vue
+                                isExists( url,'/index' )
+                            }else{
+                                isExists( url )
+                            }
+                        })
+                    */
+                    let file
+                    try {
+                        file='/index'
+                        //文件夹
+                        fs.statSync(src + url)
+                        isExists( url,file )
+                    }catch (e) {
+                        file=''
+                        //非文件夹
+                        isExists( url,file )
                     }
-                })
-            */
-            let file
-            try {
-                file='/index'
-                //文件夹
-                fs.statSync(src + url)
-                isExists( url,file )
-            }catch (e) {
-                file=''
-                //非文件夹
-                isExists( url,file )
+                    //如果object长度为
+                    switch ( Object.keys(pathObject[url]).length ) {
+                        case 2 :
+                            url = pathObject[url]['.js']
+                            break
+                        case 1 :
+                            url = pathObject[url][ Object.keys(pathObject[url])[0] ]
+                            break
+                        case 0 :
+                            console.log('\033[41;30m Error \033[41;37m not found \033[40;33m '+url+file+'.js 或 '+url+file+'.vue \033[0m')
+                            break
+                    }
+                }
+                url = '/' + staticRoot + url
             }
-            //如果object长度为
-            switch ( Object.keys(pathObject[url]).length ) {
-                case 2 :
-                    url = '/src'+pathObject[url]['.js']
-                    break
-                case 1 :
-                    url = pathObject[url][ Object.keys(pathObject[url])[0] ]
-                    break
-                case 0 :
-                    console.log('\033[41;30m Error \033[41;37m not found \033[40;33m src'+url+file+'.js 或 src'+url+file+'.vue \033[0m')
-                    break
+            cached[init]=url
+
+
+            //检测文件是否存在
+            function isExists( url,file ) {
+                let exists = ['.js','.vue']
+                pathObject[url] = Object.create({})
+                // pathObject[url] = Object.create(null)
+                // pathObject[url] = []
+                //感觉像是数组方便 但是 有个问题 当key=0 没有时，key=1 长度有，数组长度为2
+                exists.forEach( ext =>{
+                    try {
+                        fs.accessSync(src + url + file + ext ,fs.constants.F_OK)
+                        // pathObject[url].push(url + index + ext)
+                        pathObject[url][ext] = url + file + ext
+                    }catch (err){
+                        // pathObject[url][ext] = false
+                    }
+                } )
             }
-        }else{
-            //处理过一次了啊？
-            url = url.replace(/^\/@module\//,'/src/')
+        },
+        getUrl:function (url){
+            return cached[url]
         }
     }
-    return url
-}
-//检测文件是否存在
-function isExists( url,file ) {
-    let exists = ['.js','.vue']
-    pathObject[url] = Object.create({})
-    // pathObject[url] = Object.create(null)
-    // pathObject[url] = []
-    //感觉像是数组方便 但是 有个问题 当key=0 没有时，key=1 长度有，数组长度为2
-    exists.forEach( ext =>{
-        try {
-            fs.accessSync(src + url + file + ext ,fs.constants.F_OK)
-            // pathObject[url].push(url + index + ext)
-            pathObject[url][ext] = '/src'+url + file + ext
-        }catch (err){
-            // pathObject[url][ext] = false
-        }
-    } )
-    // fs.access( file,fs.constants.F_OK,(err)=> !err )
 }
 
+//缓存下
+const confUrl = urlCache()
+
 app.use(async (ctx,next)=>{
+
     let { url,type } =ctx
     let initUrl = url
-    //todo 还有优化的空间
-    url = resolveExtensions(url)
+    //这就可以直接取 不用每次修改文件都要重新执行下
+    url = confUrl.getUrl(url) ? confUrl.getUrl(url) : url
+
     if( url === '/' ){
         let content = fs.readFileSync('./index.html','utf-8')
         //写入文件

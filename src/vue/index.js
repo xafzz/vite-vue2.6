@@ -1,12 +1,12 @@
 
 
-import Vue from '../runtime/runtime.js'
-import {compileToFunctions} from "../compiler/compile.js";
+import Vue from '@/runtime/runtime'
+import {compileToFunctions} from '@/compiler/compile'
 import {query} from '@/util'
 import config from '@/core/config'
 //性能 todo 怎么看
-import {mark,measure} from "../core/util/perf.js";
-import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from "../util/compat.js";
+import {mark,measure} from '@/core/util/perf'
+import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from '@/util/compat'
 
 //指向 runtime/runtime.js 里面的 Vue.prototype.$mount
 const mount = Vue.prototype.$mount
