@@ -6,10 +6,10 @@
  *  加上 options 更加搞不明白了
  * */
 
-import { baseOptions } from './options.js'
-import parse from './parse/parse.js'
-import optimize from './optimizer.js'
-import generate from './codegen/generate.js'
+import { baseOptions } from './options'
+import parse from './parse/parse'
+import optimize from './optimizer'
+import generate from './codegen/generate'
 
 
 //compile 是一个函数 有返回值
@@ -64,7 +64,7 @@ const createCompiler = createCompilerCreator(function baseCompile(template,optio
     //源码位置 vue/src/compiler/parse.js
     //第一步 template生成ast
     //添加了 options 重写一遍 parse 过程
-    //这个很关键
+    //这个很关键 压缩模式
     options.whitespace = 'condense'
     let ast = parse(template.trim(),options)
     //第二步 优化器 打静态标记
@@ -73,6 +73,9 @@ const createCompiler = createCompilerCreator(function baseCompile(template,optio
     }
     //第三步 生成代码 generate
     const code = generate(ast, options)
+    // return {
+    //
+    // }
     console.log('code------>',code)
 })
 
