@@ -5,8 +5,8 @@ import {compileToFunctions} from '@/compiler/compile'
 import {query} from '@/util'
 import config from '@/core/config'
 //性能 todo 怎么看
-import {mark,measure} from '@/core/util/perf'
-import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from '@/util/compat'
+import {mark,measure} from '../core/util/perf'
+import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from '../util/compat'
 
 //指向 runtime/runtime.js 里面的 Vue.prototype.$mount
 const mount = Vue.prototype.$mount
@@ -48,7 +48,13 @@ Vue.prototype.$mount = function (el,hydrating){
         if ( config.performance && mark ){
             mark('compile')
         }
-
+        // 生成 render 函数
+        /**
+         * 没有处理之前，返回的是
+         *      render: 字符串
+         *      staticRenderFns：[] 里面也是字符串 或者空
+         * 处理以后，返回是 函数
+         */
         const ref = compileToFunctions(template,{
             //输出源范围
             outputSourceRange: true,    //"development" !== 'production',
@@ -61,6 +67,11 @@ Vue.prototype.$mount = function (el,hydrating){
             delimiters: options.delimiters,
             comments: options.comments
         })
+        //生成render 函数 并将 render 函数 挂载到 options 上
+        const render = ref.render
+        const staticRenderFns = ref.staticRenderFns
+        options.render = render
+        options.staticRenderFns = staticRenderFns
 
         if( config.performance && mark ){
             mark('compile end');
