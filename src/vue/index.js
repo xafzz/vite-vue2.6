@@ -10,6 +10,10 @@ import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from '../util/compat'
 
 //指向 runtime/runtime.js 里面的 Vue.prototype.$mount
 const mount = Vue.prototype.$mount
+//编译时$mount
+//将 template 转成 AST ，经过 optimize 优化打静态标记，
+//generate 生成  render 函数
+//调用运行时的$mount
 Vue.prototype.$mount = function (el,hydrating){
 
     el = el && query(el)
@@ -91,6 +95,7 @@ Vue.prototype.$mount = function (el,hydrating){
      *  三者的参数不限定是 string 类型，允许是各种类型，包括函数 、 object
      */
     //指向 runtime/runtime.js 里面的 Vue.prototype.$mount
+    //调用runtime的mount
     return mount.call(this,el,hydrating)
     // return mount.apply(el,hydrating)
     // return mount.bind(this,el,hydrating)
