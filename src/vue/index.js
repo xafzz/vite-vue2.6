@@ -4,7 +4,8 @@ import Vue from '@/runtime/runtime'
 import {compileToFunctions} from '@/compiler/compile'
 import {query} from '@/util'
 import config from '@/core/config'
-//性能 todo 怎么看
+//性能  怎么看 ？
+//在浏览器控制台中 window.performance.getEntries() 参数详见 README.md
 import {mark,measure} from '../core/util/perf'
 import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from '../util/compat'
 
@@ -13,7 +14,6 @@ const mount = Vue.prototype.$mount
 //编译时$mount
 //将 template 转成 AST ，经过 optimize 优化打静态标记，
 //generate 生成  render 函数
-//调用运行时的$mount
 Vue.prototype.$mount = function (el,hydrating){
 
     el = el && query(el)
@@ -50,7 +50,9 @@ Vue.prototype.$mount = function (el,hydrating){
 
         //编译 性能 开始
         if ( config.performance && mark ){
-            mark('compile')
+            // 这是 开头 就跟标签一样 这是开始标签 参数 在 measure 第二个参数
+            mark('compile start')
+            // console.time('vue component name:' + (options.name) + ' compile')
         }
         // 生成 render 函数
         /**
@@ -78,9 +80,18 @@ Vue.prototype.$mount = function (el,hydrating){
         options.staticRenderFns = staticRenderFns
 
         if( config.performance && mark ){
+            // 这是 结束 就跟标签一样 这是结束标签 参数 在 measure 第三个参数
             mark('compile end');
             //this._name 肯定是 options 的name 从哪来的呢 todo
-            measure(("vue " + (options.name) + " compile"), 'compile', 'compile end');
+            //对开始跟结尾进行 收集下，将第一个参数打印出来 startTime 单位是 毫秒数
+            //window.performance.getEntries()
+            //     name：资源名称，是资源的绝对路径或调用mark方法自定义的名称
+            //     startTime:开始时间
+            //     duration：加载时间
+            //     entryType：资源类型，entryType类型不同数组中的对象结构也不同
+            //     initiatorType：发起的请求者
+            // console.timeEnd('vue component name:' + (options.name) + ' compile')
+            measure(("vue component name:" + (options.name) + " compile"), 'compile start', 'compile end')
         }
 
     }
@@ -96,6 +107,7 @@ Vue.prototype.$mount = function (el,hydrating){
      */
     //指向 runtime/runtime.js 里面的 Vue.prototype.$mount
     //调用runtime的mount
+    //调用运行时的$mount
     return mount.call(this,el,hydrating)
     // return mount.apply(el,hydrating)
     // return mount.bind(this,el,hydrating)

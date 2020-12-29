@@ -1,4 +1,6 @@
 import { initMixin } from './init.js'
+import {mark} from "../util/perf";
+import config from "../config";
 
 function Vue(options){
     //编译的时候 将 template跟options放到文件里面
@@ -28,6 +30,10 @@ function Vue(options){
 
     if( !(this instanceof Vue) ){
         console.warn('Vue is a constructor and should be called with the `new` keyword')
+    }
+
+    if( mark && config.performance ){
+        mark('init')
     }
 
     //你又在哪？

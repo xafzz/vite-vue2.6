@@ -1,8 +1,8 @@
 
-import Vue from "../core/core.js";
-import {query} from "../util/index.js";
-import { inBrowser } from '../core/util/index.js'
-import { mountComponent } from '../core/instance/lifecycle.js'
+import Vue from "../core/core";
+import {query} from "../util/index";
+import { inBrowser } from '../core/util'
+import { mountComponent } from '../core/instance/lifecycle'
 
 //这个过程更像是挂载的过程
 //后期在写吧

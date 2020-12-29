@@ -47,6 +47,7 @@ export function initMixin( Vue ){
                 vm
             )
         }
+        //todo 省略了很多 该补补了
 
         //为什么要加这一句呢
         /*
@@ -65,7 +66,6 @@ export function initMixin( Vue ){
             写法一直接 挂载到了 $mount 上，写法二没有直接 $mount ，所以 需要单独在执行下
             问题：
             写法一目前 vm.$options 上 vm.$options.el = undefined
-
          */
         if( vm.$options.el ){
             vm.$mount(vm.$options.el)

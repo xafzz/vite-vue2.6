@@ -1,37 +1,33 @@
-# 生成 render 函数，compile 结束
+# vite-vue
 
-    1、模版缓存
-    2、生成 render 函数  
-    3、编译过程结束
+-------
+#### window.performance 前端性能，同时开启性能打印
+    思来想去还是去百度下，so简单看了下，
+    可以在浏览器控制台中：window.performance.getEntries() 
+    怎么用呢，引入就不累赘了
+    可以当成是 <div>xxx</div> 我要获取的就是中间的执行时间
+    mark( 'start' )
+        要观察的代码放入这儿
+    mark( 'end' )
+    //在 mark( 'end' ) 直接跟上 measure() 就可以
+    measure(' 这就是要输出的name ' , 'start' , 'end')
+    measure 参数说明
+        第一个参数,打印出来的/显示的name
+        第二个参数,mark( 'start' ),就是 start
+        第三个参数,mark( 'end' ),就是 end
+    在浏览器控制台
+        //打印出来的结果里面 measure 第一个参数的 name 
+        //duration 就是执行时间 单位是 毫秒数
+        window.performance.getEntries() 
+            name：资源名称，是资源的绝对路径或调用mark方法自定义的名称
+            startTime:开始时间
+            duration：加载时间
+            entryType：资源类型，entryType类型不同数组中的对象结构也不同
+            initiatorType：发起的请求者
 
-    这个过程写完莫名的想笑，哈哈哈，难道生成 render 函数就是这样嘛？
+#### window.performance 扩展 console.time(xx),console.timeEnd(xx)
 
-### createCompileToFunctionFn(compile)
-#### compileToFunctions(template,options) 生成render函数
-###### 用模版字符串当 key ，缓存 rander 跟 不需要编译的代码 转成 函数
-    1、经过 compile(template,options) 成功将模版 放入 cache 进行缓存了
-    2、经过 const compiled = compile(template,options) 生产的 render
-    3、res.render = createFunction(compiled.render,FnGenErrors) render 转成 render 函数
-    4、render、staticRenderFns 转成函数 同时 缓存起来
-        //render 是个函数 就是生成 render 函数呗？
-        res.render = createFunction(compiled.render,FnGenErrors)
-        //这是个数组啊 数组里面是个 function 可以为空 
-        res.staticRenderFns = compiled.staticRenderFns.map(code => createFunction(code,FnGenErrors))
+    两者打印的时间 可以说一致
+    后者直接在浏览器控制台进行打印了 xx：耗时数
 
-### createCompilerCreator(baseCompile)
-#### createCompiler(baseOptions)
-##### compile(template,options)
-###### 检测有问题的表达式，detectErrors
-    1、finalOptions 就是 options
-    2、options 存在的时候
-           if( options.modules ) 合并自定义 modules
-           if( options.directives ) 合并自定义 directives
-    3、detectErrors  检测有问题的表达式 这块很关键 但是现在没有写
-           这块没有写 以后在补上
-    
-
-----
-## 改动,详见分支 9.1-feature-update-server/server.js
-
-    1、引入 @ 路径
-    2、import的时候 可以不用 加后缀名，如 .js、index.js、.vue
+-------
