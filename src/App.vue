@@ -35,10 +35,12 @@ export default {
             cla:'class'
         }
     },
-    beforeCreate() {
+    beforeCreate () {
+        document.querySelector('#app').append('----- beforeCreate -----')
         console.log('beforeCreate')
     },
     created() {
+        document.querySelector('#app').append('----- created -----')
         console.log('created')
     },
     beforeMount() {

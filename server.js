@@ -183,7 +183,9 @@ function urlCache(){
             }
         },
         getUrl:function (url){
-            return cached[url]
+            return url
+                ? cached[url] ? cached[url] : ''
+                : cached
         }
     }
 }
@@ -307,6 +309,7 @@ watcher.on('change',(path)=>{
         client:false
     })
 }).on('add',(path)=>{
+    //添加的时候
     // console.log('add->',path)
     //
 })

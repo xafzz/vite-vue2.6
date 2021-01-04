@@ -27,6 +27,7 @@ Vue.prototype.$mount = function (el,hydrating){
     //从哪儿来的呢？ 从 initMixin()->this._init()->mergeOptions()来的
     //$options 包含了当前组件中所有用到生命周期，data，watch，computed以及 过滤器 组件 自定义指令
     const options = this.$options
+    console.log(this)
     //先写这儿 options 是 undefined options.render 还会报错,
     // 现在有了可以继续了
     //解析template/el并转换为render函数

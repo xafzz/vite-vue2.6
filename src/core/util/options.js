@@ -2,6 +2,7 @@
 
 import config from '../config.js'
 import { isBuiltInTag,hasOwn } from '../../shared/util.js'
+import {LIFECYCLE_HOOKS} from "../../shared/constants";
 /**
  * unicode letters used for parsing html tags, component names and property paths.
  * using https://www.w3.org/TR/html53/semantics-scripting.html#potentialcustomelementname
@@ -15,8 +16,89 @@ export const unicodeRegExp = /a-zA-Z\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037
  * value into the final value.
  * 合并的策略处理options
  */
-
+//写简单了
 const strats = config.optionMergeStrategies //{}
+
+/**
+ * options with restrictions
+ */
+{
+    strats.el = strats.propsData = function (parent, child, vm, key){
+        if( !vm ){
+            console.warn(`option ${key} can only be used during instance creation with the new keyword`)
+        }
+        return defaultStrat(parent,child)
+    }
+}
+
+function mergeDataOrFn(parentVal,childVal,vm){
+    //childVal 就是 页面中data
+    if( !vm ){
+        console.log('目前的实现中没有涉及到---->',vm)
+    }else{
+        return function mergedInstanceDataFn(){
+            //合并实例
+            let instanceData = typeof childVal === 'function'
+                ? childVal.call(vm, vm)
+                : childVal
+            let defaultData = typeof parentVal === 'function'
+                ? parentVal.call(vm, vm)
+                : parentVal
+            if( instanceData ){
+                return mergeData(instanceData,defaultData)
+            }else{
+                return defaultData
+            }
+        }
+    }
+}
+//递归将2个 数据对象合并到一个 helper 里
+function mergeData(to,from){
+    if( !from ){
+        return to
+    }
+    console.log('------------------>mergeData,from：',from)
+}
+//options 里面的 data 处理
+strats.data = function (parentVal,childVal,vm){
+    //vm 就是 vue 本身 即 this
+    if( !vm ){
+        //没有return
+        if( childVal && typeof childVal !== 'function' ){
+            console.warn(`The "data" option should be a function, that returns a per-instance value in component definitions`)
+            return parentVal
+        }
+        return mergeDataOrFn(parentVal,childVal)
+    }
+    return mergeDataOrFn(parentVal,childVal,vm)
+}
+
+
+function mergeHook(parentVal,childVal){
+    let res = childVal
+        ? parentVal
+            ? parentVal.concat(childVal)
+            : Array.isArray(childVal)
+                ? childVal
+                : [childVal]
+        : parentVal
+    return res
+        ? dedupeHooks(res)
+        : res
+}
+function dedupeHooks(hooks){
+    let res = []
+    for (let i = 0; i <hooks.length ; i++) {
+        if( res.indexOf(hooks[i]) === -1 ){
+            res.push(hooks[i])
+        }
+    }
+    return res
+}
+//生命周期 合并
+LIFECYCLE_HOOKS.forEach(hook=>{
+    strats[hook]=mergeHook
+})
 
 
 /**
@@ -30,19 +112,21 @@ export function mergeOptions( parent,child,vm ){
 
     //验证组件名称 我目前咩有用到 等后续看看是哪儿用到了
     //当前没有使用组件
-    // checkComponents(child)
+
+    {
+        checkComponents(child)
+    }
 
     if( typeof child === 'function' ){
         console.log('typeof child === function--------->没有进来')
         // child = child.options
     }
     //props 这一步可以省略了 没有写 props
-    // normalizeProps(child, vm)
+    normalizeProps(child, vm)
     //也没有他
-    // normalizeInject(child, vm)
+    normalizeInject(child, vm)
     //将原始函数指令规范化为对象格式 没有自定义指令
-    // normalizeDirectives(child)
-
+    normalizeDirectives(child)
 
     // Apply extends and mixins on the child options,
     // but only if it is a raw options object that isn't
@@ -64,7 +148,7 @@ export function mergeOptions( parent,child,vm ){
     for (key in parent) {
         mergeFieId(key)
     }
-    //
+
     for ( key in child) {
         //检测parent 是否包含 key
         if( !hasOwn(parent,key) ){
@@ -74,8 +158,12 @@ export function mergeOptions( parent,child,vm ){
 
     //默认策略  优先组件里的属性
     function mergeFieId( key ){
-        let start = strats[key] || defaultStrat
-        options[key] = start( parent[key], child[key], vm, key )
+        let strat = strats[key] || defaultStrat
+        // console.log(key,strat)
+        /*
+            data:mergeDataOrFn->mergeData
+         */
+        options[key] = strat( parent[key], child[key], vm, key )
     }
 
     return options

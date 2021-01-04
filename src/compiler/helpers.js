@@ -224,7 +224,6 @@ function addHandler(el,name,value,modifiers,important,range,dynamic){
     el.plain = false
 }
 
-
 export {
     getAndRemoveAttr,
     getBindingAttr,

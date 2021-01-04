@@ -1,7 +1,13 @@
 
 import config from '../config.js'
 import { mark,measure } from '../util/perf.js'
-import { mergeOptions } from '../util/index.js'
+import { mergeOptions } from '../util'
+import {initProxy} from "./proxy";
+import {initLifecycle,callHook} from "./lifecycle";
+import {initEvents} from "./events";
+import {initRender} from "./render";
+import {initInjections} from "./inject";
+import {initState} from "./state";
 
 let uid = 0
 
@@ -47,7 +53,37 @@ export function initMixin( Vue ){
                 vm
             )
         }
-        //todo 省略了很多 该补补了
+        //非 production
+        //TODO 尼玛完全不知道这是干啥子去了 就为了在Vue上加个 _renderProxy ？这是干啥用的
+        //经历下面 这几个步骤 vue 多了很多属性
+        initProxy(vm)
+        // else vm._renderProxy = vm
+
+        //我就是我
+        vm._self = vm
+        //字面意思就是 初始化生命周期
+        //初始化个毛线啊 毛都没有 这里面属性就多了
+        initLifecycle(vm)
+        // 初始化事件 就当初始了毛线 _events、_hasHookEvent
+        initEvents(vm)
+        //初始化 render
+        initRender(vm)
+        //这个函数不知道干啥的 不过 beforeCreate 就很熟了
+        //
+        /*
+            对options的处理有问题 直接就是一个function,源码里面是个 object？ 找到原因了
+            mergeOptions 合并的时候 出问题了
+            详见 src/core/util/options.js
+         */
+        // 调用 call/apply
+        callHook(vm,'beforeCreate')
+        //暂时没有这块
+        // initInjections(vm)
+        //props/methods/data/computed
+        //
+        // initState(vm)
+        // callHook(vm,'created')
+
 
         //为什么要加这一句呢
         /*
