@@ -98,6 +98,26 @@ function isPlainObject(obj){
     return _toString.call(obj) === '[object Object]'
 }
 
+/**
+ * Quick object check - this is primarily used to tell
+ * Objects from primitive values when we know the value
+ * is a JSON-compliant type.
+ */
+function isObject (obj) {
+    return obj !== null && typeof obj === 'object'
+}
+
+//Dep 移除依赖
+function remove(arr,item){
+    if( arr.length ){
+        //获取下标
+        let index = arr.indexOf(item)
+        //存在的时候 我才 删除
+        if( index > -1 ){
+            return arr.slice(index,1)
+        }
+    }
+}
 
 export {
     no,
@@ -107,5 +127,7 @@ export {
     hasOwn,
     isPromise,
     bind,
-    isPlainObject
+    isPlainObject,
+    isObject,
+    remove
 }

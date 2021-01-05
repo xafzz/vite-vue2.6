@@ -3,6 +3,7 @@ import {mark} from "../util/perf";
 import config from "../config";
 
 function Vue(options){
+
     //编译的时候 将 template跟options放到文件里面
     let __template = options.App.template
     let __options = options.App.script

@@ -21,5 +21,18 @@ export default {
      * component. This is platform-dependent and may be overwritten.
      */
     isReservedTag: no,
+    /**
+     * Perform updates asynchronously. Intended to be used by Vue Test Utils
+     * This will significantly reduce performance if set to false.
+     */
+    async: true,
 
+    /**
+     * Warn handler for watcher warns
+     */
+    warnHandler: null,
+    /**
+     * Whether to suppress warnings.
+     */
+    silent: false,
 }
