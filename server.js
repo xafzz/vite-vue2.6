@@ -183,7 +183,9 @@ function urlCache(){
             }
         },
         getUrl:function (url){
-            return cached[url]
+            return url
+                ? cached[url] ? cached[url] : ''
+                : cached
         }
     }
 }
