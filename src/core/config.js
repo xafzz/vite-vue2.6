@@ -12,13 +12,28 @@ export default {
     /**
      * Whether to record perf
      * 是否记录性能
-     * 怎么查看 todo
+     * 怎么查看 ?
+     * 在浏览器控制台中 window.performance.getEntries() 当然还有其它方法
      */
-    performance: false,
+    performance: true,
     /**
      * Check if a tag is reserved so that it cannot be registered as a
      * component. This is platform-dependent and may be overwritten.
      */
     isReservedTag: no,
 
+    /**
+     * Perform updates asynchronously. Intended to be used by Vue Test Utils
+     * This will significantly reduce performance if set to false.
+     */
+    async: true,
+
+    /**
+     * Warn handler for watcher warns
+     */
+    warnHandler: null,
+    /**
+     * Whether to suppress warnings.
+     */
+    silent: false,
 }
