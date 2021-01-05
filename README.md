@@ -1,4 +1,6 @@
-# initGlobalAPI - initMixin
+==================================  提交分隔符  ===================================
+
+## initGlobalAPI - initMixin
 
     在文件 src/core/core.js
     实现initGlobalAPI
