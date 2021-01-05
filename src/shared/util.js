@@ -3,6 +3,33 @@ import { makeMap } from "../compiler/helpers.js";
 //又出来了 freeze
 export const emptyObject = Object.freeze({})
 
+// These helpers produce better VM code in JS engines due to their
+// explicitness and function inlining.
+export function isUndef (v){
+    return v === undefined || v === null
+}
+
+/**
+ * Check if val is a valid array index.
+ */
+export function isValidArrayIndex (val) {
+    const n = parseFloat(String(val))
+    return n >= 0 && Math.floor(n) === n && isFinite(val)
+}
+
+/**
+ * Check if value is primitive. 检测类型
+ */
+export function isPrimitive (value){
+    return (
+        typeof value === 'string' ||
+        typeof value === 'number' ||
+        // $flow-disable-line
+        typeof value === 'symbol' ||
+        typeof value === 'boolean'
+    )
+}
+
 //附录/shared/util.js 文件工具方法全解
 //http://caibaojian.com/vue-design/appendix/shared-util.html
 /**

@@ -34,6 +34,9 @@ export default class Dep{
     notify(){
         // stabilize the subscriber list first
         const subs = this.subs.slice()
+        if( subs.length ){
+            console.log('终于有值了')
+        }
         //异步
         if( config.async ){
             // subs aren't sorted in scheduler if not running async

@@ -1,6 +1,6 @@
 import Dep from "./dep";
 import {def, hasProto, isServerRendering} from "../util";
-import {hasOwn, isObject, isPlainObject} from "../../shared/util";
+import {hasOwn, isObject, isPlainObject, isPrimitive, isUndef, isValidArrayIndex} from "../../shared/util";
 import {Vnode} from "../vdom/vnode";
 import {arrayMethods} from "./array";
 
@@ -193,4 +193,103 @@ export function observe( value, asRootData ){
         ob.vmCount ++
     }
     return ob
+}
+
+/**
+ * set a property on an object. adds the new property and
+ * triggers change notification if the property doesn't
+ * already exist.
+ */
+/**
+ *
+ * @param target { Array<any> | Object }
+ * @param key { any }
+ * @param val { any }
+ */
+export function set(target,key,val){
+    /*
+        测试用例
+        let obj= {
+            a:1
+        }
+        set(obj,'b','2')
+     */
+    // isUndef 不为空
+    if( isUndef(target) || isPrimitive(target) ){
+        console.warn('Cannot set reactive property on undefined, null, or primitive value: ' + target)
+    }
+    //是数组 并且是 有效的索引
+    if( Array.isArray(target) && isValidArrayIndex(key) ){
+        target.length = Math.max(target.length,key)
+        target.splice(key,1,val)
+        return val
+    }
+
+    if( key in target && !(key in Object.prototype) ){
+        target[key] = val
+        return val
+    }
+    //是否是响应式数据
+    //要设置 首先他要是一个响应式数据
+    let ob = (target).__ob__
+    if( target._isVue || ( ob && ob.vmCount ) ){
+        console.warn(`'Avoid adding reactive properties to a Vue instance or its root $data ' +
+      'at runtime - declare it upfront in the data option.'`)
+        return val
+    }
+
+    if( !ob ){
+        target[key] = val
+        return val
+    }
+
+    defineReactive( ob.value, key, val )
+    ob.dep.notify()
+    return val
+}
+
+/**
+ * @description 删除属性，并在必要时触发更改。
+ * @param target { Array<any> | Object }
+ * @param key { any }
+ */
+export function del( target,key ){
+    /*
+        测试用例
+        let obj= {
+            a:1,
+            b:2
+        }
+        observe(obj)
+        del(obj,'b')
+     */
+    // isUndef 不为空
+    if( isUndef(target) || isPrimitive(target) ){
+        console.warn('Cannot set reactive property on undefined, null, or primitive value: ' + target)
+    }
+
+    //是数组 并且是 有效的索引
+    if( Array.isArray(target) && isValidArrayIndex(key) ){
+        target.splice(key, 1)
+    }
+
+    //是否是响应式数据
+    //要设置 首先他要是一个响应式数据
+    let ob = (target).__ob__
+    if( target._isVue || ( ob && ob.vmCount ) ){
+        console.warn(`Avoid deleting properties on a Vue instance or its root $data - just set it to null`)
+        return
+    }
+
+    //不存在的时候
+    if( !hasOwn(target,key) ){
+        return
+    }
+
+    delete target[key]
+    //不是响应式数据
+    if( !ob ){
+        return
+    }
+    ob.dep.notify()
 }
