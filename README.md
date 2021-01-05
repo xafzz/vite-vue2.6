@@ -24,7 +24,7 @@
 > 没有 options resolveConstructorOptions( vm.constructor ) 一直是undefined
 
 
-####### 下面几块都没有实现 用到的时候在写
+###### 下面几块都没有实现 用到的时候在写
 #### KeepAlive
 #### initUse
 #### initMixin
