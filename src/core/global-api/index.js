@@ -1,5 +1,9 @@
 import config from "../config.js";
 import {ASSET_TYPES} from "../../shared/constants.js";
+import {
+    extend,  //shared/util
+    mergeOptions
+} from '../util'
 
 export function initGlobalAPI( Vue ){
 
@@ -19,7 +23,10 @@ export function initGlobalAPI( Vue ){
     // them unless you are aware of the risk.
     //todo 留着后面写
     Vue.util = {
-        // defineReactive //
+        // warn //没有warn 直接用 console.warn 表示
+        extend, //shared/util 混入传入的数组中
+        mergeOptions,  //合并options initMixin 用到了
+        // defineReactive //todo 好熟悉，这不是 observer 将数据处理成响应式数据(仅限object)，现在先不写数据处理这块
     }
 
     //不是空的了

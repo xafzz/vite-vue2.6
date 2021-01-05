@@ -24,7 +24,6 @@ function genStaticKeys( modules ){
     },[]).join(',')
 }
 
-
 //将属性混合到el中
 function extend(el,_form){
     for( let key in _form ){
@@ -37,7 +36,6 @@ function extend(el,_form){
  * Check if a tag is a built-in tag.
  */
 export const isBuiltInTag = makeMap('slot,component', true)
-
 
 /**
  * Check whether an object has the property.
@@ -55,8 +53,6 @@ const isPromise = function (val){
     // )
 }
 
-
-
 /**
  * Simple bind polyfill for environments that do not support it,
  * e.g., PhantomJS 1.x. Technically, we don't need this anymore
@@ -64,7 +60,6 @@ const isPromise = function (val){
  * But removing it would mean breaking code that was able to run in
  * PhantomJS 1.x, so this must be kept for backward compatibility.
  */
-
 /* istanbul ignore next */
 function polyfillBind (fn, ctx) {
     function boundFn (a) {

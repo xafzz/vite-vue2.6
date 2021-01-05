@@ -85,6 +85,7 @@ Vue.prototype.$mount = function (el,hydrating){
 
     }
 
+    console.log(this)
     /**
      *  call 、bind 、 apply 这三个函数的第一个参数都是 this 的指向对象
      *                  参数                      返回值
