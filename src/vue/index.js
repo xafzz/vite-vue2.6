@@ -1,5 +1,3 @@
-
-
 import Vue from '../runtime/runtime.js'
 import {compileToFunctions} from "../compiler/compile.js";
 import {query} from "../util/index.js";
