@@ -3,6 +3,7 @@ import config from '../config.js'
 import { mark,measure } from '../util/perf.js'
 import { mergeOptions } from '../util/index.js'
 import {initProxy} from "./proxy";
+import {initLifecycle} from "./lifecycle";
 
 let uid = 0
 
@@ -56,6 +57,11 @@ export function initMixin( Vue ){
             initProxy( vm )
             //生产环境 vm._renderProxy = vm
         }
+
+        vm._self = vm
+        //初始化生命周期
+        //vue实例一些属性进行赋值
+        initLifecycle(vm)
 
 
 
