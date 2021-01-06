@@ -140,6 +140,7 @@ export function defineReactive(obj,key,val,customSetter,shallow){
                 return
             }
             if( customSetter ){
+                //initRender 的时候 打印 警告信息
                 console.log('我也不知道这是啥customSetter：',customSetter)
                 customSetter()
             }

@@ -1,5 +1,7 @@
 
 
+//正在更新子组件
+export let isUpdatingChildComponent = false
 
 export function mountComponent( vm,el,hydrating ){
 

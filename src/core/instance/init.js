@@ -4,6 +4,8 @@ import { mark,measure } from '../util/perf.js'
 import { mergeOptions } from '../util/index.js'
 import {initProxy} from "./proxy";
 import {initLifecycle} from "./lifecycle";
+import {initEvents} from "./events";
+import {initRender} from "./render";
 
 let uid = 0
 
@@ -62,6 +64,11 @@ export function initMixin( Vue ){
         //初始化生命周期
         //vue实例一些属性进行赋值
         initLifecycle(vm)
+        //初始化事件相关
+        //父组件绑定在当前组件上的事件
+        initEvents(vm)
+        //initRender 初始化 render 函数
+        initRender(vm)
 
 
 
