@@ -8,6 +8,9 @@ export const inBrowser = typeof window !== 'undefined'
 export const inWeex = typeof WXEnvironment !== 'undefined' && !!WXEnvironment.platform
 
 
+// Firefox has a "watch" function on Object.prototype...
+export const nativeWatch = ({}).watch
+
 export function isNative (Ctor) {
     return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
 }

@@ -3,7 +3,7 @@ import config from '../config.js'
 import { mark,measure } from '../util/perf.js'
 import { mergeOptions } from '../util/index.js'
 import {initProxy} from "./proxy";
-import {initLifecycle} from "./lifecycle";
+import {callHook, initLifecycle} from "./lifecycle";
 import {initEvents} from "./events";
 import {initRender} from "./render";
 
@@ -69,6 +69,8 @@ export function initMixin( Vue ){
         initEvents(vm)
         //initRender 初始化 render 函数
         initRender(vm)
+        // 调用 call/apply
+        callHook(vm,'beforeCreate')
 
 
 

@@ -1,3 +1,5 @@
+import {popTarget, pushTarget} from "../observer/dep";
+import {invokeWithErrorHandling} from "../util";
 
 
 //正在更新子组件
@@ -61,4 +63,27 @@ export function initLifecycle( vm ){
     vm._isDestroyed = false
     //当前实例是否正在被销毁,还没有销毁完成(介于生命周期中deforeDestroy和destroyed之间)。
     vm._isBeingDestroyed = false
+}
+
+export function callHook( vm,hook ){
+
+    // 调用 生命周期钩子函数时 禁用 dep 收集
+    // disable dep collection when invoking lifecycle hooks
+    pushTarget()
+
+    //拿到 hook 对应的 钩子函数
+    //不要疑问 如果没有的话 是 undefined
+    let handlers = vm.$options[ hook ]
+
+    let info = `${hook} hook`
+    if( handlers ){
+        for (let i = 0,j = handlers.length; i < j ; i++) {
+            invokeWithErrorHandling(handlers[i],vm,null,info)
+        }
+    }
+    if( vm._hasHookEvent ){
+        console.log('_hasHookEvent')
+    }
+
+    popTarget()
 }

@@ -71,7 +71,7 @@ export default {
     watch:{
         show(){
             console.log('show is change')
-        }
+        },
     },
     computed:{
         changeComputed(){
