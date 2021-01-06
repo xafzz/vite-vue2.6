@@ -1,4 +1,6 @@
 
+==================================  提交分隔符  ===================================
+
 ## initProxy - initMixin
 
 ###### 代理对象是es6的新特性，它主要用来自定义对象一些基本操作（如查找，赋值，枚举等）。
@@ -8,7 +10,7 @@
     实现initProxy
 
 > 在Vue上添加 _renderProxy，但是不知道干什么用的
-> 
+>
 > 如果是生产环境或者是不支持proxy的 renderProxy 就是 Vue 本身
 
 #### hasProxy
@@ -24,3 +26,38 @@
 #### hasHandler
 
     应用场景在于查看vm实例是否拥有某个属性，比如调用for in循环遍历vm实例属性时，会触发hasHandler方法。
+
+==================================  提交分隔符  ===================================
+
+## initGlobalAPI - initMixin
+
+    在文件 src/core/core.js
+    实现initGlobalAPI
+    还没有去 initMixin 或者说没有 this._init()
+
+#### configDef
+>Vue.config更改给提示
+#### Vue.util
+>extend
+>
+>mergeOptions 合并options
+>
+>defineReactive 将数据处理成响应式数据
+#### Vue.set、delete、nextTick
+>set 详见分支 10-Observer-Dep-Watcher
+>
+> delete 详见分支 10-Observer-Dep-Watcher
+>
+> nextTick
+#### Vue.observable
+> 目前不知道要干什么
+#### Vue.options
+> 没有 options resolveConstructorOptions( vm.constructor ) 一直是undefined
+
+------------
+###### 下面几块都没有实现 用到的时候在写
+#### KeepAlive
+#### initUse
+#### initMixin
+#### initExtend
+#### initAssetRegisters
