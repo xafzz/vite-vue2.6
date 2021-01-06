@@ -21,8 +21,15 @@ export function isNative (Ctor) {
 //vue服务器呈现程序可以设置vue_ENV
 let _isServer
 export function isServerRendering(){
-    if( _isServer === undefined ){
-        _isServer = false
+    if (_isServer === undefined) {
+        /* istanbul ignore if */
+        if (!inBrowser && !inWeex && typeof global !== 'undefined') {
+            // detect presence of vue-server-renderer and avoid
+            // Webpack shimming the process
+            _isServer = global['process'] && global['process'].env.VUE_ENV === 'server'
+        } else {
+            _isServer = false
+        }
     }
     return _isServer
 }

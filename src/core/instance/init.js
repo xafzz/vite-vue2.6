@@ -6,6 +6,7 @@ import {initProxy} from "./proxy";
 import {callHook, initLifecycle} from "./lifecycle";
 import {initEvents} from "./events";
 import {initRender} from "./render";
+import {initState} from "./state";
 
 let uid = 0
 
@@ -70,8 +71,16 @@ export function initMixin( Vue ){
         //initRender 初始化 render 函数
         initRender(vm)
         // 调用 call/apply
+        // 顺便完善了一下 src/core/util/options options 合并策略
         callHook(vm,'beforeCreate')
 
+        // proxy
+        // data、methods、computed 都挂载到 vm 上
+        // computed 在 _computedWatchers 同时也在 _watchers ，他还有个 lazy 可能是缓存吧
+        // watch 没有 $watch
+        // 说白话点就是 经过这个过程 data、methods、computed 里面的属性 在 vue 上都能找到了
+        //todo $watch 不在vm上
+        initState(vm)
 
 
         //为什么要加这一句呢

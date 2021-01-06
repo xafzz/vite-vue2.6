@@ -9,7 +9,7 @@
         </div>
         <!-- 这是一段注释 -->
         <div class="center" v-for="(item,key) in 10" :key="key">
-            <p>{{ msg }},{{ changeComputed }}</p>
+            <p>{{ msg }},{{ changeComputed }},{{computedParams(2)}}</p>
         </div>
         <div class="v-once" v-once >
             v-once
@@ -70,12 +70,17 @@ export default {
     },
     watch:{
         show(){
-            console.log('show is change')
+            console.log('show is change',this.show)
         },
     },
     computed:{
         changeComputed(){
             return this.msg * 2
+        },
+        computedParams(){
+            return (param)=>{
+                return this.msg * param * 2
+            }
         }
     },
     methods:{
