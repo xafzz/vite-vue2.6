@@ -36,4 +36,10 @@ export default {
      * Whether to suppress warnings.
      */
     silent: false,
+
+    /**
+     * Custom user key aliases for v-on
+     */
+    // $flow-disable-line
+    keyCodes: Object.create(null),
 }

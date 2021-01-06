@@ -2,6 +2,7 @@
 import config from '../config.js'
 import { mark,measure } from '../util/perf.js'
 import { mergeOptions } from '../util/index.js'
+import {initProxy} from "./proxy";
 
 let uid = 0
 
@@ -10,7 +11,6 @@ export function initMixin( Vue ){
     Vue.prototype._init = function ( options ) {
         //vm也搞到了 这就是 vue里面可以直接用vm的原因吧
         const vm = this
-
         vm._uid = uid++
 
         let startTag, endTag
@@ -47,6 +47,17 @@ export function initMixin( Vue ){
                 vm
             )
         }
+
+        {
+            //Vue实例的_renderProxy属性赋值
+            //vue 上 挂载 _renderProxy
+            //todo _renderProxy 干什么用的？
+            //测试环境
+            initProxy( vm )
+            //生产环境 vm._renderProxy = vm
+        }
+
+
 
         //为什么要加这一句呢
         /*
