@@ -153,6 +153,30 @@ function toArray (list, start){
     }
     return ret
 }
+
+
+/**
+ * 将值转换为实际呈现的字符串。
+ */
+function toString( val ){
+    return val == null
+        ? ''
+        : Array.isArray(val) || (isPlainObject(val) && val.toString === _toString)
+            ? JSON.stringify(val, null, 2)
+            : String(val)
+
+}
+
+/**
+ * 将输入值转换为数字以保持持久性。
+ * 如果转换失败，则返回原始字符串
+ */
+function toNumber (val) {
+    const n = parseFloat(val)
+    return isNaN(n) ? val : n
+}
+
+
 export {
     no,
     noop,
@@ -164,5 +188,7 @@ export {
     isPlainObject,
     isObject,
     remove,
-    toArray
+    toArray,
+    toString,
+    toNumber
 }

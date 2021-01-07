@@ -4,6 +4,7 @@ import {emptyObject} from "../../shared/util";
 import {createElement} from "../vdom/create-element";
 import {defineReactive} from "../observer/observe";
 import {isUpdatingChildComponent} from "./lifecycle";
+import {installRenderHelpers} from "./render-helpers";
 
 
 export function initRender( vm ){
@@ -42,5 +43,29 @@ export function initRender( vm ){
         defineReactive(vm, '$listeners', options._parentListeners || emptyObject, () => {
             !isUpdatingChildComponent && console.warn(`$listeners is readonly.`, vm)
         }, true)
+    }
+}
+
+
+export function renderMixin( Vue ){
+
+    // install runtime convenience helpers
+    // 原型上邦了这么多东西
+    installRenderHelpers(Vue.prototype)
+
+    /**
+     * @description 将回调延迟到下次 DOM 更新循环之后执行。在修改数据之后立即使用它，然后等待 DOM 更新。它跟全局方法 Vue.nextTick 一样，不同的是回调的 this 自动绑定到调用它的实例上。
+     * @param fn
+     */
+    Vue.prototype.$nextTick = function (fn){
+        console.log('-------->Vue.prototype.$nextTick')
+    }
+
+    /**
+     *
+     * @private
+     */
+    Vue.prototype._render = function (){
+        console.log('-------->Vue.prototype._render')
     }
 }
