@@ -1,7 +1,6 @@
 import { initMixin } from './init.js'
-import {mark} from "../util/perf";
-import config from "../config";
 import { stateMixin } from "./state";
+import { eventsMixin } from "./events";
 
 function Vue(options){
     //编译的时候 将 template跟options放到文件里面
@@ -32,11 +31,6 @@ function Vue(options){
     if( !(this instanceof Vue) ){
         console.warn('Vue is a constructor and should be called with the `new` keyword')
     }
-
-    if( mark && config.performance ){
-        mark('init')
-    }
-
     //你又在哪？
     //在 initMixin 里面 第一行就是 Vue.prototype._init=function()
     //挂载到原型上了
@@ -45,6 +39,9 @@ function Vue(options){
 
 //字面意思就是 init 呗
 initMixin(Vue)
+//data、methods、computed、watch、props
 stateMixin(Vue)
+//给组件实例附加$on,$off,$emit,$once方法。
+eventsMixin(Vue)
 
 export default Vue
