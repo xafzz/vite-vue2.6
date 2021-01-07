@@ -7,7 +7,7 @@ import {callHook, initLifecycle} from "./lifecycle";
 import {initEvents} from "./events";
 import {initRender} from "./render";
 import {initState} from "./state";
-import {initProvide} from "./inject";
+import {initInjections, initProvide} from "./inject";
 
 let uid = 0
 
@@ -75,6 +75,8 @@ export function initMixin( Vue ){
         // 调用 call/apply
         // 顺便完善了一下 src/core/util/options options 合并策略
         callHook(vm,'beforeCreate')
+        // resolve injections before data/props
+        initInjections(vm)
 
         // proxy
         // data、methods、computed 都挂载到 vm 上
@@ -84,7 +86,9 @@ export function initMixin( Vue ){
         //todo $watch 不在vm上
         initState(vm)
         //省略
+        // resolve injections before data/props
         initProvide(vm)
+        callHook(vm, 'created')
 
         if( config.performance && mark ){
             //对开始跟结尾进行 收集下，将第一个参数打印出来 startTime 单位是 毫秒数
