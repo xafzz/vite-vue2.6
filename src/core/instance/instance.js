@@ -1,6 +1,7 @@
 import { initMixin } from './init.js'
 import { stateMixin } from "./state";
 import { eventsMixin } from "./events";
+import {lifecycleMixin} from "./lifecycle";
 
 function Vue(options){
     //编译的时候 将 template跟options放到文件里面
@@ -43,5 +44,7 @@ initMixin(Vue)
 stateMixin(Vue)
 //给组件实例附加$on,$off,$emit,$once方法。
 eventsMixin(Vue)
+//给组件实例附加 _update,$forceUpdate,$destroy 方法。
+lifecycleMixin(Vue)
 
 export default Vue

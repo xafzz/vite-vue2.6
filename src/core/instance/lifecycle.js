@@ -85,3 +85,31 @@ export function callHook( vm,hook ){
 
     popTarget()
 }
+
+
+export function lifecycleMixin( Vue ){
+
+    /**
+     * @description 首次渲染/数据更新,_update 方法的作用是把 VNode 渲染成真实的 DOM
+     * @param vnode { VNode }
+     * @param hydrating { ? boolean }
+     * @private
+     */
+    Vue.prototype._update = function (vnode,hydrating){
+        console.log('------>Vue.prototype._update')
+    }
+
+    /**
+     * @description 迫使 Vue 实例重新渲染。注意它仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
+     */
+    Vue.prototype.$forceUpdate = function (){
+        console.log('------>Vue.prototype.$forceUpdate')
+    }
+
+    /**
+     * @description 完全销毁一个实例。清理它与其它实例的连接，解绑它的全部指令及事件监听器。触发 beforeDestroy 和 destroyed 的钩子。
+     */
+    Vue.prototype.$destroy = function (){
+        console.log('------>Vue.prototype.$destroy')
+    }
+}
