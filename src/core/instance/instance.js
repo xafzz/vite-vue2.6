@@ -1,8 +1,8 @@
 import { initMixin } from './init.js'
 import { stateMixin } from "./state";
 import { eventsMixin } from "./events";
-import {lifecycleMixin} from "./lifecycle";
-import {renderMixin} from "./render";
+import { lifecycleMixin } from "./lifecycle";
+import { renderMixin } from "./render";
 
 function Vue(options){
     //编译的时候 将 template跟options放到文件里面
