@@ -127,9 +127,19 @@ export function defineReactive(obj,key,val,customSetter,shallow){
             if (getter){
                 console.log('有getter，打印下-->',getter,'还有obj---->',obj)
             }
+
             let value = getter ? getter.call(obj) : val
+            /*
+                stateMixin 时 object.prototype.$watch 时候 new watcher
+                拿 watch 里面 对应的值 触发了 get 又到了这儿
+                这个值在哪赋值的呢？
+                watcher.prototype.get 的时候 pushTarget(this) 把 vue 整个实例放进来了 所以就走到这儿了
+             */
             if( Dep.target ){
-                console.log('Dep.target 木有值啊，有值的话 我在过来补上',Dep.target)
+                dep.depend()
+                if( childOb ){
+                    console.log('Dep.target有值了详见上面注释，但是 childOb 还是没有',childOb)
+                }
             }
             return value
         },

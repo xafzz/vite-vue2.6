@@ -1,6 +1,6 @@
 import {bind, hasOwn, isPlainObject, noop} from "../../shared/util";
 import {handleError, isReserved, isServerRendering, nativeWatch} from "../util";
-import {observe} from "../observer/observe";
+import {del, observe, set} from "../observer/observe";
 import Dep, {popTarget, pushTarget} from "../observer/dep";
 import Watcher from "../observer/watcher";
 
@@ -295,7 +295,68 @@ function createWatcher( vm, expOrFn, handler, options){
     }
 
     // $watch 没有啊 看了下源码 $watch 在 stateMixin 这不坑了嘛
-    if( typeof vm.$watch === 'function' ){
+    // 写上 prototype.$watch
+    // if( typeof vm.$watch === 'function' ){
         return vm.$watch(expOrFn,handler,options)
+    // }
+}
+
+
+//stateInit
+//重新构建
+export function stateMixin( Vue ){
+
+    // flow somehow has problems with directly declared definition object
+    // when using Object.defineProperty, so we have to procedurally build up
+    // the object here.
+    // todo 不明白
+    // 箭头函数会不会有出现this 丢失问题
+    let dataDef = {}
+    dataDef.get = () => this._data
+    let propsDef = {}
+    propsDef.get = () => this._props
+
+    {
+        dataDef.set = () => console.warn('Avoid replacing instance root $data.Use nested data properties instead.')
+        propsDef.set = () => console.warn('props is readonly.')
+    }
+    //在vue原型上 添加 $data/$props 并且这两个只是可读属性
+    Object.defineProperty(Vue.prototype,'$data',dataDef)
+    Object.defineProperty(Vue.prototype,'$props',propsDef)
+
+    //在原型上 添加 $set $delete 已在 observe 实现
+    Vue.prototype.$set = set
+    Vue.prototype.$delete = del
+
+    /**
+     * 在 createWatcher() 用到了
+     * @param expOrFn {string | Function}
+     * @param cb { any }
+     * @param options { ?Object }
+     */
+    Vue.prototype.$watch = function ( expOrFn,cb,options ){
+        let vm = this
+        if( isPlainObject(cb) ){
+            console.log('cb你是一个对象了')
+            return createWatcher(vm, expOrFn, cb, options)
+        }
+
+        options = options || {}
+
+        //watch 的时候 user = true
+        //computed 的时候 lazy = true
+        options.user = true
+        //从这儿 完善 watcher 里面 typeof expOrFn !== 'function' 完善 Watcher.prototype.get
+        //生成一条 跟 watch 有关的详细内容 同时 插入到了
+        let watcher = new Watcher(vm,expOrFn,cb,options)
+        if( options.immediate ){
+            console.log('options.immediate 这是干什么的',options.immediate)
+        }
+
+        return function unwatchFn(){
+            //从所有依赖项的订阅者列表中删除自身
+            // 暂时没有用到
+            watcher.teardown()
+        }
     }
 }

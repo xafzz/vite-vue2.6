@@ -26,7 +26,7 @@ export default {
     data(){
         return {
             msg:1,
-            show:true,
+            show:false,
             list:[
                 {name:1,age:2},
                 {name:3,age:4},

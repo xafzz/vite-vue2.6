@@ -12,7 +12,6 @@ export default class Dep{
 
     //添加依赖
     addSub(sub){
-        console.log('addSub--->',sub)
         this.subs.push(sub)
     }
 
@@ -25,7 +24,7 @@ export default class Dep{
     //收集依赖
     depend(){
         if( Dep.target ){
-            console.log('depend----->')
+            //this 是 当前 触发这个 dep 有id的哦
             Dep.target.addDep(this)
         }
     }
