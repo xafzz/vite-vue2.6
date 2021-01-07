@@ -3,8 +3,10 @@
 
 ## initProvide - initMixin
 
+### initInjections
 ### initProvide
 
+    inject跟provide配套使用，所以并一块了
     从编译开始就有意略过去了，所以这儿也省略了，用到在完善
 
 ### window.performance 前端性能，同时开启性能打印
