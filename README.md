@@ -3,11 +3,11 @@
 
 ## initProvide - initMixin
 
-#### initProvide
+### initProvide
 
     从编译开始就有意略过去了，所以这儿也省略了，用到在完善
 
-#### window.performance 前端性能，同时开启性能打印
+### window.performance 前端性能，同时开启性能打印
     思来想去还是去百度下，so简单看了下，
     可以在浏览器控制台中：window.performance.getEntries() 
     怎么用呢，引入就不累赘了
