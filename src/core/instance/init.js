@@ -1,13 +1,13 @@
 
 import config from '../config.js'
 import { mark,measure } from '../util/perf.js'
-import { mergeOptions } from '../util'
+import { mergeOptions,formatComponentName } from '../util'
 import {initProxy} from "./proxy";
-import {initLifecycle,callHook} from "./lifecycle";
+import {callHook, initLifecycle} from "./lifecycle";
 import {initEvents} from "./events";
 import {initRender} from "./render";
-import {initInjections} from "./inject";
 import {initState} from "./state";
+import {initInjections, initProvide} from "./inject";
 
 let uid = 0
 
@@ -16,7 +16,6 @@ export function initMixin( Vue ){
     Vue.prototype._init = function ( options ) {
         //vm也搞到了 这就是 vue里面可以直接用vm的原因吧
         const vm = this
-
         vm._uid = uid++
 
         let startTag, endTag
@@ -28,6 +27,7 @@ export function initMixin( Vue ){
             startTag = `vue-perf-start:${vm._uid}`
             endTag = `vue-perf-end:${vm._uid}`
             mark(startTag)
+            // console.time(startTag)
         }
 
         //避免被观察到到一个标志
@@ -53,36 +53,57 @@ export function initMixin( Vue ){
                 vm
             )
         }
-        //非 production
-        //TODO 尼玛完全不知道这是干啥子去了 就为了在Vue上加个 _renderProxy ？这是干啥用的
-        //经历下面 这几个步骤 vue 多了很多属性
-        initProxy(vm)
-        // else vm._renderProxy = vm
 
-        //我就是我
+        {
+            //Vue实例的_renderProxy属性赋值
+            //vue 上 挂载 _renderProxy
+            //todo _renderProxy 干什么用的？
+            //测试环境
+            initProxy( vm )
+            //生产环境 vm._renderProxy = vm
+        }
+
         vm._self = vm
-        //字面意思就是 初始化生命周期
-        //初始化个毛线啊 毛都没有 这里面属性就多了
+        //初始化生命周期
+        //vue实例一些属性进行赋值
         initLifecycle(vm)
-        // 初始化事件 就当初始了毛线 _events、_hasHookEvent
+        //初始化事件相关
+        //父组件绑定在当前组件上的事件
         initEvents(vm)
-        //初始化 render
+        //initRender 初始化 render 函数
         initRender(vm)
-        //这个函数不知道干啥的 不过 beforeCreate 就很熟了
-        //
-        /*
-            对options的处理有问题 直接就是一个function,源码里面是个 object？ 找到原因了
-            mergeOptions 合并的时候 出问题了
-            详见 src/core/util/options.js
-         */
         // 调用 call/apply
+        // 顺便完善了一下 src/core/util/options options 合并策略
         callHook(vm,'beforeCreate')
-        //暂时没有这块
-        // initInjections(vm)
-        //props/methods/data/computed
-        //
-        // initState(vm)
-        // callHook(vm,'created')
+        // resolve injections before data/props
+        initInjections(vm)
+
+        // proxy
+        // data、methods、computed 都挂载到 vm 上
+        // computed 在 _computedWatchers 同时也在 _watchers ，他还有个 lazy 可能是缓存吧
+        // watch 没有 $watch
+        // 说白话点就是 经过这个过程 data、methods、computed 里面的属性 在 vue 上都能找到了
+        //todo $watch 不在vm上
+        initState(vm)
+        //省略
+        // resolve injections before data/props
+        initProvide(vm)
+        callHook(vm, 'created')
+
+        if( config.performance && mark ){
+            //对开始跟结尾进行 收集下，将第一个参数打印出来 startTime 单位是 毫秒数
+            //window.performance.getEntries()
+            //     name：资源名称，是资源的绝对路径或调用mark方法自定义的名称
+            //     startTime:开始时间
+            //     duration：加载时间
+            //     entryType：资源类型，entryType类型不同数组中的对象结构也不同
+            //     initiatorType：发起的请求者
+            // 详见 README.md
+            vm._name = formatComponentName(vm, false)
+            mark(endTag)
+            // console.timeEnd(startTag)
+            measure(`vue ${vm._name} init`, startTag, endTag)
+        }
 
 
         //为什么要加这一句呢

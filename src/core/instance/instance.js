@@ -1,9 +1,9 @@
 import { initMixin } from './init.js'
 import {mark} from "../util/perf";
 import config from "../config";
+import { stateMixin } from "./state";
 
 function Vue(options){
-
     //编译的时候 将 template跟options放到文件里面
     let __template = options.App.template
     let __options = options.App.script
@@ -45,5 +45,6 @@ function Vue(options){
 
 //字面意思就是 init 呗
 initMixin(Vue)
+stateMixin(Vue)
 
 export default Vue

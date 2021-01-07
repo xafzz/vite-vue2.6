@@ -1,44 +1,46 @@
 
-import { resolveSlots } from './render-helpers/resolve-slots'
+import {resolveSlots} from "./render-helpers/resolve-slots";
 import {emptyObject} from "../../shared/util";
-import { createElement } from '../vdom/create-element'
+import {createElement} from "../vdom/create-element";
+import {defineReactive} from "../observer/observe";
+import {isUpdatingChildComponent} from "./lifecycle";
+
 
 export function initRender( vm ){
+    // the root of the child tree
+    vm._vnode = null
+    // v-once cached trees
+    vm._staticTrees = null
 
-   //vnode 感觉好像接触到了什么
-   // 难道要跟 compile 生成的 render 函数对接
-   vm._vnode = null // the root of the child tree
-   // 这个 看起来就像是 用了 v-once 以后 staticRenderFns
-   vm._staticTrees = null  // v-once cached trees
+    const options = vm.$options
+    // the placeholder node in parent tree
+    const parentVnode = vm.$vnode = options._parentVnode
+    const renderContext = parentVnode && parentVnode.context
 
-   let options = vm.$options
-   let parentVnode = vm.$vnode = options._parentVnode
-   let renderContenxt = parentVnode && parentVnode.context
-   vm.$slots = resolveSlots(options._renderChildren,renderContenxt)
-   vm.$scopedSlots = emptyObject
+    // 组件之slot插槽
+    vm.$slots = resolveSlots(options._renderChildren, renderContext)
+    vm.$scopedSlots = emptyObject
 
+    // $createElement方法的主要作用是解析用户写的模板html，从而成为浏览器可以识别的格式。
+    // 将 createElement 方法绑定到这个实例，这样我们就可以在其中得到适当的 render context。
+    // todo createElement() 方法的最后一个参数 是来判断是 开发者是否在调用vue的时候 使用了 render 函数
+    vm._c = (a,b,c,d) => createElement(vm,a,b,c,d,false)
+    // normalization is always applied for the public version, used in
+    // user-written render functions.
+    vm.$createElement = (a,b,c,d) => createElement(vm, a, b, c, d, true)
 
-   // bind the createElement fn to this instance
-   // so that we get proper render context inside it.
-   // args order: tag, data, children, normalizationType, alwaysNormalize
-   // internal version is used by render functions compiled from templates
-   //将createElement fn绑定到该实例，
-   // 以便我们在其中获得适当的渲染上下文。
-   // args顺序：标记，数据，子代，normalizationType，
-   // alwaysNormalize内部版本由模板编译的渲染函数使用
-   //渲染的时候 好像就是用这个吧 里面还很复杂 不过 _c 也出来 就是 createElement
-   //todo 后面先去写吧 这就是一个初始化
-   vm._c = (a,b,c,d) => createElement(vm,a,b,c,d,false)
-   // normalization is always applied for the public version, used in
-   // user-written render functions.
-   vm.$createElement = (a,b,c,d) => createElement(vm, a, b, c, d, true)
+    // $attrs & $listeners are exposed for easier HOC creation.
+    // they need to be reactive so that HOCs using them are always updated
+    //undefined
+    let parentData = parentVnode && parentVnode.data
 
+    {
+        defineReactive(vm,'$attr', parentData && parentData.attrs || emptyObject,()=>{
+            !isUpdatingChildComponent && console.warn('$attr is readonly')
+        },true)
 
-   // $attrs & $listeners are exposed for easier HOC creation.
-   // they need to be reactive so that HOCs using them are always updated
-   //undefined
-   let parentData = parentVnode && parentVnode.data
-
-   //todo 这个记一下，单独写 defineReactive 的补上
-
+        defineReactive(vm, '$listeners', options._parentListeners || emptyObject, () => {
+            !isUpdatingChildComponent && console.warn(`$listeners is readonly.`, vm)
+        }, true)
+    }
 }

@@ -3,6 +3,33 @@ import { makeMap } from "../compiler/helpers.js";
 //又出来了 freeze
 export const emptyObject = Object.freeze({})
 
+// These helpers produce better VM code in JS engines due to their
+// explicitness and function inlining.
+export function isUndef (v){
+    return v === undefined || v === null
+}
+
+/**
+ * Check if val is a valid array index.
+ */
+export function isValidArrayIndex (val) {
+    const n = parseFloat(String(val))
+    return n >= 0 && Math.floor(n) === n && isFinite(val)
+}
+
+/**
+ * Check if value is primitive. 检测类型
+ */
+export function isPrimitive (value){
+    return (
+        typeof value === 'string' ||
+        typeof value === 'number' ||
+        // $flow-disable-line
+        typeof value === 'symbol' ||
+        typeof value === 'boolean'
+    )
+}
+
 //附录/shared/util.js 文件工具方法全解
 //http://caibaojian.com/vue-design/appendix/shared-util.html
 /**
@@ -24,7 +51,6 @@ function genStaticKeys( modules ){
     },[]).join(',')
 }
 
-
 //将属性混合到el中
 function extend(el,_form){
     for( let key in _form ){
@@ -37,7 +63,6 @@ function extend(el,_form){
  * Check if a tag is a built-in tag.
  */
 export const isBuiltInTag = makeMap('slot,component', true)
-
 
 /**
  * Check whether an object has the property.
@@ -55,8 +80,6 @@ const isPromise = function (val){
     // )
 }
 
-
-
 /**
  * Simple bind polyfill for environments that do not support it,
  * e.g., PhantomJS 1.x. Technically, we don't need this anymore
@@ -64,7 +87,6 @@ const isPromise = function (val){
  * But removing it would mean breaking code that was able to run in
  * PhantomJS 1.x, so this must be kept for backward compatibility.
  */
-
 /* istanbul ignore next */
 function polyfillBind (fn, ctx) {
     function boundFn (a) {
@@ -119,6 +141,18 @@ function remove(arr,item){
     }
 }
 
+/**
+ * Convert an Array-like object to a real Array.
+ */
+function toArray (list, start){
+    start = start || 0
+    let i = list.length - start
+    const ret = new Array(i)
+    while (i--) {
+        ret[i] = list[i + start]
+    }
+    return ret
+}
 export {
     no,
     noop,
@@ -129,5 +163,6 @@ export {
     bind,
     isPlainObject,
     isObject,
-    remove
+    remove,
+    toArray
 }

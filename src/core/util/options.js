@@ -1,8 +1,7 @@
-
-
 import config from '../config.js'
-import { isBuiltInTag,hasOwn } from '../../shared/util.js'
-import {LIFECYCLE_HOOKS} from "../../shared/constants";
+import {isBuiltInTag, hasOwn, isPlainObject, extend} from '../../shared/util.js'
+import {ASSET_TYPES, LIFECYCLE_HOOKS} from "../../shared/constants";
+import {nativeWatch} from "./env";
 /**
  * unicode letters used for parsing html tags, component names and property paths.
  * using https://www.w3.org/TR/html53/semantics-scripting.html#potentialcustomelementname
@@ -16,9 +15,8 @@ export const unicodeRegExp = /a-zA-Z\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037
  * value into the final value.
  * 合并的策略处理options
  */
-//写简单了
-const strats = config.optionMergeStrategies //{}
 
+const strats = config.optionMergeStrategies //{})
 /**
  * options with restrictions
  */
@@ -73,7 +71,9 @@ strats.data = function (parentVal,childVal,vm){
     return mergeDataOrFn(parentVal,childVal,vm)
 }
 
-
+/*
+    vue生命各个生命周期
+ */
 function mergeHook(parentVal,childVal){
     let res = childVal
         ? parentVal
@@ -100,6 +100,103 @@ LIFECYCLE_HOOKS.forEach(hook=>{
     strats[hook]=mergeHook
 })
 
+/**
+ * Assets
+ *
+ * When a vm is present (instance creation), we need to do
+ * a three-way merge between constructor options, instance
+ * options and parent options.
+ * components/directives/filters的合并策略
+ */
+function mergeAssets( parentVal,childVal,vm,key ){
+    let res = Object.create(parentVal || null)
+    if( childVal ){
+        console.log('什么时候有childVal',childVal)
+        assertObjectType(key,childVal)
+        return extend(res,childVal)
+    }else{
+        return res
+    }
+}
+
+function assertObjectType (name, value) {
+    if (!isPlainObject(value)) {
+        console.warn(`Invalid value for option "${name}": expected an Object`)
+    }
+}
+
+ASSET_TYPES.forEach(type=>{
+    strats[type+'s'] = mergeAssets
+})
+
+/**
+ * Watchers.
+ *
+ * Watchers 不是相互覆盖 而是合并
+ */
+strats.watch = function ( parentVal,childVal,vm,key ){
+    //打印
+    if( parentVal ){
+        console.log('什么时候 有parentVal',parentVal)
+        if( !childVal ){
+            console.log('什么时候 有parentVal,childVal没有',childVal)
+        }
+    }
+    //解决Firefox的Object.prototype.watch
+    if( parentVal === nativeWatch ){
+        parentVal = undefined
+    }
+    if( childVal === nativeWatch ){
+        childVal = undefined
+    }
+
+    if( !childVal ){
+        return Object.create(parentVal || null)
+    }
+
+    {
+        //childVal 不是一个 object 的时候 warn
+        assertObjectType(key,childVal,vm)
+    }
+    //初始化 watch
+    if( !parentVal ){
+        return childVal
+    }
+    console.log('还是parentVal的问题，到底是个啥呢',parentVal)
+}
+
+/**
+ * Other object hashes.
+ * props/methods/inject/computed的策略
+ */
+strats.props =
+strats.methods =
+strats.inject =
+strats.computed = function (parentVal,childVal,vm,key){
+
+    //childVal 不是一个 object 的时候 warn
+    if( childVal ){
+        assertObjectType(key,childVal)
+    }
+    if( !parentVal ){
+        return childVal
+    }
+    console.log('还是parentVal的问题，到底是个啥呢',parentVal)
+}
+
+/**
+ * provide
+ */
+strats.provide = mergeDataOrFn
+/**
+ * Default strategy.
+ * 默认策略  优先组件里的属性
+ */
+let defaultStrat = (parentVal,childVal)=>{
+    return childVal === undefined
+        ? parentVal
+        : childVal
+}
 
 /**
  * Merge two option objects into a new one.
@@ -169,20 +266,8 @@ export function mergeOptions( parent,child,vm ){
     return options
 }
 
-
-/**
- * Default strategy.
- * 默认策略  优先组件里的属性
- */
-let defaultStrat = (parentVal,childVal)=>{
-    return childVal === undefined
-        ? parentVal
-        : childVal
-}
-
 //验证标签名称
 function checkComponents( options ){
-
     for (const key in options.components) {
         validateComponentName(key)
     }

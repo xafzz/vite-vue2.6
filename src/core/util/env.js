@@ -4,10 +4,15 @@ export const hasProto = '__proto__' in {}
 
 //window 在小程序里面 就没有window对象 但是在这儿都是ture吧
 export const inBrowser = typeof window !== 'undefined'
+//weex？
 export const inWeex = typeof WXEnvironment !== 'undefined' && !!WXEnvironment.platform
 
 // Firefox has a "watch" function on Object.prototype...
 export const nativeWatch = ({}).watch
+
+export function isNative (Ctor) {
+    return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
+}
 
 // this needs to be lazy-evaled because vue may be required before
 // vue-server-renderer can set VUE_ENV
@@ -27,13 +32,3 @@ export function isServerRendering(){
     }
     return _isServer
 }
-
-
-export function isNative( Ctor ){
-    return typeof (Ctor === 'function' && /native code/.test( Ctor.toString() ))
-}
-
-
-
-
-

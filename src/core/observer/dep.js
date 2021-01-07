@@ -12,7 +12,6 @@ export default class Dep{
 
     //添加依赖
     addSub(sub){
-        console.log('addSub--->',sub)
         this.subs.push(sub)
     }
 
@@ -25,7 +24,7 @@ export default class Dep{
     //收集依赖
     depend(){
         if( Dep.target ){
-            console.log('depend----->')
+            //this 是 当前 触发这个 dep 有id的哦
             Dep.target.addDep(this)
         }
     }
@@ -34,6 +33,9 @@ export default class Dep{
     notify(){
         // stabilize the subscriber list first
         const subs = this.subs.slice()
+        if( subs.length ){
+            console.log('终于有值了')
+        }
         //异步
         if( config.async ){
             // subs aren't sorted in scheduler if not running async
