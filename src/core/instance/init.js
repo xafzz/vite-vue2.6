@@ -1,12 +1,13 @@
 
 import config from '../config.js'
 import { mark,measure } from '../util/perf.js'
-import { mergeOptions } from '../util/index.js'
+import { mergeOptions,formatComponentName } from '../util'
 import {initProxy} from "./proxy";
 import {callHook, initLifecycle} from "./lifecycle";
 import {initEvents} from "./events";
 import {initRender} from "./render";
 import {initState} from "./state";
+import {initProvide} from "./inject";
 
 let uid = 0
 
@@ -26,6 +27,7 @@ export function initMixin( Vue ){
             startTag = `vue-perf-start:${vm._uid}`
             endTag = `vue-perf-end:${vm._uid}`
             mark(startTag)
+            // console.time(startTag)
         }
 
         //避免被观察到到一个标志
@@ -81,6 +83,23 @@ export function initMixin( Vue ){
         // 说白话点就是 经过这个过程 data、methods、computed 里面的属性 在 vue 上都能找到了
         //todo $watch 不在vm上
         initState(vm)
+        //省略
+        initProvide(vm)
+
+        if( config.performance && mark ){
+            //对开始跟结尾进行 收集下，将第一个参数打印出来 startTime 单位是 毫秒数
+            //window.performance.getEntries()
+            //     name：资源名称，是资源的绝对路径或调用mark方法自定义的名称
+            //     startTime:开始时间
+            //     duration：加载时间
+            //     entryType：资源类型，entryType类型不同数组中的对象结构也不同
+            //     initiatorType：发起的请求者
+            // 详见 README.md
+            vm._name = formatComponentName(vm, false)
+            mark(endTag)
+            // console.timeEnd(startTag)
+            measure(`vue ${vm._name} init`, startTag, endTag)
+        }
 
 
         //为什么要加这一句呢
