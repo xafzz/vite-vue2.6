@@ -1,7 +1,7 @@
 import Dep from "./dep";
 import {def, hasProto, isServerRendering} from "../util";
 import {hasOwn, isObject, isPlainObject, isPrimitive, isUndef, isValidArrayIndex} from "../../shared/util";
-import {Vnode} from "../vdom/vnode";
+import {VNode} from "../vdom/vnode";
 import {arrayMethods} from "./array";
 
 /**
@@ -182,7 +182,7 @@ export function observe( value, asRootData ){
 
     // src/core/instance/instance.js
     // this instanceof Vue
-    if( !isObject(value) || value instanceof Vnode ){
+    if( !isObject(value) || value instanceof VNode ){
         return
     }
     let ob
