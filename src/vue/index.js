@@ -14,7 +14,7 @@ const mount = Vue.prototype.$mount
 //编译时$mount
 //将 template 转成 AST ，经过 optimize 优化打静态标记，
 //generate 生成  render 函数
-Vue.prototype.$mount = function (el,hydrating){
+Vue.prototype.$mount = function (el,hydrating=false){
 
     el = el && query(el)
 

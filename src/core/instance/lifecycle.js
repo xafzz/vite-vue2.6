@@ -1,16 +1,61 @@
 import {popTarget, pushTarget} from "../observer/dep";
-import {invokeWithErrorHandling} from "../util";
+import {invokeWithErrorHandling, noop} from "../util";
+import config from "../config";
+import {mark, measure} from "../util/perf";
+import Watcher from "../observer/watcher";
 
 //正在更新子组件
 export let isUpdatingChildComponent = false
 
+/**
+ *
+ * @param vm { Vue }
+ * @param el { #app节点内容 }
+ * @param hydrating { 默认false，猜测跟ssr有关 }
+ */
 export function mountComponent( vm,el,hydrating ){
 
     //el 挂载到 this.$el 上
     vm.$el = el
-    // if( vm.$options ){
-    //     console.log('vm.$options-------->没写',vm.$options)
-    // }
+    if( !vm.$options.render ){
+        console.log('vm.$options.render 没有的时候?跟打包有关系？',vm.$options)
+    }
+    //意外惊喜 beforeMount 藏在这儿
+    callHook(vm,'beforeMount')
+
+    //更新组件？
+    let updateComponent
+    //这个不多做解释
+    //在这 开启 performance
+    if( config.performance && mark ){
+        updateComponent = () => {
+            let name = vm._name
+            let id = vm._uid
+            let startTag = `vue-perf-start:${id}`
+            let endTag = `vue-perf-end:${id}`
+
+            mark(startTag)
+            let vnode = vm._render()
+            mark(endTag)
+            measure(`vue ${name} render`,startTag,endTag)
+
+        }
+    }else{
+        updateComponent = () => {
+            console.log(111)
+            // vm._update(vm._render(),hydrating)
+        }
+    }
+
+    // 我们将其设置为观察者的构造函数中的vm._watcher，
+    // 因为观察者的初始补丁可能会调用forceUpdate（例如，在子组件的已挂接钩子内部），
+    // 它依赖于已经定义的vm._watcher
+    // 对这块不是很理解 在敲下去看看
+    new Watcher(vm, updateComponent, noop, {
+        before(){
+            console.log('什么时候来这')
+        }
+    }, true /* isRenderWatcher */)
 }
 
 export function initLifecycle( vm ){
