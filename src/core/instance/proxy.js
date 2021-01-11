@@ -57,9 +57,10 @@ let initProxy
 
     //应用场景在于查看vm实例是否拥有某个属性
     //比如调用for in循环遍历vm实例属性时，会触发hasHandler方法。
+    // 生成的 render 函数里面 有 _v _c _m等 这就是检查 vm 上是否已经有了这些函数
     let hasHandler = {
         has( target,key ){
-            console.log('什么时候可以打印下呢')
+            // key  _v _c _m
             const has = key in target
             // allowedGlobals最终存储的是一个代表特殊属性名称的映射表
             const isAllowed = allowedGlobals(key) || ( typeof key === 'string' && key.charAt(0) === '_' && !(key in target.$data) )

@@ -313,9 +313,18 @@ export function stateMixin( Vue ){
     // todo 不明白
     // 箭头函数会不会有出现this 丢失问题
     let dataDef = {}
-    dataDef.get = () => this._data
+    //在 src/core/instance/render.js Vue.prototype._render时
+    //vnode = render.call(vm._renderProxy,vm.$createElement)
+    // 报错 Cannot read property '_data' of undefined
+    // dataDef.get = () => this._data
+    dataDef.get = function(){
+        return this._data
+    }
     let propsDef = {}
-    propsDef.get = () => this._props
+    // propsDef.get = () => this._props
+    propsDef.get = function(){
+        return this._props
+    }
 
     {
         dataDef.set = () => console.warn('Avoid replacing instance root $data.Use nested data properties instead.')

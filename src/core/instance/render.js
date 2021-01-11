@@ -46,6 +46,8 @@ export function initRender( vm ){
     }
 }
 
+//当前渲染组件的实例
+export let currentRenderingInstance = null
 
 export function renderMixin( Vue ){
 
@@ -66,6 +68,31 @@ export function renderMixin( Vue ){
      * @private
      */
     Vue.prototype._render = function (){
-        console.log('-------->Vue.prototype._render')
+        let vm = this
+        //render 就是之前生成到 render 函数
+        //_parentVnode undefined
+        let { render,_parentVnode } = vm.$options
+
+        if(_parentVnode){
+            console.log('_parentVnode不为空？',_parentVnode)
+        }
+
+        // 设置父vnode。这使渲染功能可以访问占位符节点上的数据。
+        // 没有值 也是 undefined
+        // 有值到时候 到时候 再来看看
+        vm.$vnode = _parentVnode
+        // render self 这么渲染到
+        let vnode
+        try {
+            // 无需维护堆栈，因为所有渲染fns都彼此分开调用。
+            // 修补父组件时，将调用嵌套组件的渲染fns。
+            // 当前渲染的组件实例 就是 他自己
+            currentRenderingInstance = vm
+            //vm._renderProxy 检查 render 函数里面的各个函数 比如 _c _v _m
+            vnode = render.call(vm._renderProxy,vm.$createElement)
+
+        }catch (e) {
+            console.error('有错误:',e)
+        }
     }
 }
