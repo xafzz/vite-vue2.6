@@ -38,11 +38,12 @@ export function mountComponent( vm,el,hydrating ){
             let vnode = vm._render()
             mark(endTag)
             measure(`vue ${name} render`,startTag,endTag)
+            console.log('vnode  为空----->',vnode)
 
         }
     }else{
         updateComponent = () => {
-            console.log(111)
+            console.log('没有走这儿')
             // vm._update(vm._render(),hydrating)
         }
     }
