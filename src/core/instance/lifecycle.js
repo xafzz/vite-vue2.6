@@ -52,6 +52,19 @@ export function mountComponent( vm,el,hydrating ){
     // 因为观察者的初始补丁可能会调用forceUpdate（例如，在子组件的已挂接钩子内部），
     // 它依赖于已经定义的vm._watcher
     // 对这块不是很理解 在敲下去看看
+    /*
+        游走的过程
+        at Proxy.computedGetter (state:244)
+        at eval (eval at createFunction (compile:25), <anonymous>:3:582)
+        at Proxy.renderList (render-list:31)
+        at Proxy.eval (eval at createFunction (compile:25), <anonymous>:3:481)
+        at Vue._render (render:92)
+        at Vue.updateComponent (lifecycle:38)
+        at Watcher.get (watcher:119)
+        at new Watcher (watcher:102)
+        at mountComponent (lifecycle:61)
+        at Vue.$mount (runtime:14)
+     */
     new Watcher(vm, updateComponent, noop, {
         before(){
             console.log('什么时候来这')

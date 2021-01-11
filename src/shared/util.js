@@ -5,8 +5,13 @@ export const emptyObject = Object.freeze({})
 
 // These helpers produce better VM code in JS engines due to their
 // explicitness and function inlining.
+//是空
 export function isUndef (v){
     return v === undefined || v === null
+}
+//不为空
+export function isDef(v){
+    return v !== undefined && v !== null
 }
 
 /**

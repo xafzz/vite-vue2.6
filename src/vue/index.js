@@ -76,6 +76,8 @@ Vue.prototype.$mount = function (el,hydrating=false){
         //生成render 函数 并将 render 函数 挂载到 options 上
         const render = ref.render
         const staticRenderFns = ref.staticRenderFns
+        //主要是为了直接查看方便
+        this.customRenderToString = ref.render.toString()
         options.render = render
         options.staticRenderFns = staticRenderFns
 

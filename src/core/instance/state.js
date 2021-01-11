@@ -209,7 +209,6 @@ function initComputed(vm,computed){
  * @param userDef { Object | Function } 函数
  */
 export function defineComputed( target, key, userDef ){
-
     let shouldCache = !isServerRendering()
     if( typeof userDef === 'function' ){
         sharedPropertyDefinition.get = shouldCache
@@ -235,15 +234,49 @@ export function defineComputed( target, key, userDef ){
 }
 
 //缓存是在这创建的嘛？
+//计算属性
+/*
+    游走过程
+    at Proxy.computedGetter (state:254)
+    at eval (eval at createFunction (compile:25), <anonymous>:3:582)
+    at Proxy.renderList (render-list:31)
+    at Proxy.eval (eval at createFunction (compile:25), <anonymous>:3:481)
+    at Vue._render (render:92)
+    at Vue.updateComponent (lifecycle:38)
+    at Watcher.get (watcher:119)
+    at new Watcher (watcher:102)
+    at mountComponent (lifecycle:68)
+    at Vue.$mount (runtime:14)
+ */
 function createComputedGetter(key){
+    /*
+        computed:{
+            changeComputed(){
+                return this.msg * 2
+            },
+            computedParams(){
+                return (param)=>{
+                    return this.msg * param * 2
+                }
+            }
+        },
+
+        key 就是 changeComputed、computedParams
+     */
     return function computedGetter(){
-        //存在的
+        //计算属性存放到这儿
         let watcher = this._computedWatchers && this._computedWatchers[key]
+        //每个 computed 创建 一个 watcher 表达式在 expression 里面
+        // console.log(watcher)
         if( watcher ){
-            console.log('走到这儿的时候打印下没明白')
+            // console.log('走到这儿的时候打印下没明白',Dep.target)
+            // 在 watcher 里面，this.dirty = this.lazy
+            // this.lazy 在计算属性的时候穿进去 是 true
+            // src/core/observer/watcher.js 里面有注释
             if( watcher.dirty ){
                 watcher.evaluate()
             }
+            //这也是有值的 就是 vm 本身
             if( Dep.target ){
                 watcher.depend()
             }

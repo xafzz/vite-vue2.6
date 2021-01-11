@@ -185,4 +185,26 @@ Watcher.prototype.teardown = function (){
 
 }
 
+/**
+ * Evaluate the value of the watcher.
+ * This only gets called for lazy watchers.
+ * 评估观察者的价值。只有懒惰的观察者才需要这样做
+ * computed 惰性观察者
+ */
+Watcher.prototype.evaluate = function (){
+    this.value = this.get()
+    this.dirty = false
+}
+
+/**
+ * Depend on all deps collected by this watcher.
+ */
+Watcher.prototype.depend = function (){
+
+    let i = this.deps.length
+    while (i--) {
+        this.deps[i].depend()
+    }
+}
+
 export default Watcher

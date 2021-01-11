@@ -9,7 +9,10 @@
         </div>
         <!-- 这是一段注释 -->
         <div class="center" v-for="(item,key) in 10" :key="key">
-            <p>{{ msg }},{{ changeComputed }},{{computedParams(2)}}</p>
+            <p>{{ msg }},{{ changeComputed }},{{computedParams(2)}},item:{{item}},key:{{key}}</p>
+        </div>
+        <div class="v-once" v-once >
+            v-once
         </div>
         <div class="v-once" v-once >
             v-once

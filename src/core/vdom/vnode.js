@@ -91,3 +91,18 @@ prototypeAccessors.child.get = function (){
 Object.defineProperties(VNode.prototype,prototypeAccessors)
 
 export { VNode }
+
+//创建文本节点
+export function createTextVNode( val ){
+    //vnode:97 VNode {tag: undefined, data: undefined, children: undefined, text: " 点击 ", elm: undefined, …}
+    //console.log(new VNode(undefined,undefined,undefined,String(val)))
+    return new VNode(undefined,undefined,undefined,String(val))
+}
+export function createEmptyVNode(text=''){
+    let node = new VNode()
+    node.text = text
+    node.isComment = true
+    // VNode {tag: undefined, data: undefined, children: undefined, text: " 这是一段注释 ", elm: undefined, …}
+    // console.log(node)
+    return node
+}

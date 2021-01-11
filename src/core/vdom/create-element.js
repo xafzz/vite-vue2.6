@@ -10,5 +10,5 @@ export function createElement(
     normalizationType,
     alwaysNormalize
 ){
-    console.log('这么关键的一个函数 createElement 一定要用的时候 再去写')
+    console.log(tag,data,'这么关键的一个函数 createElement 一定要用的时候 再去写')
 }
