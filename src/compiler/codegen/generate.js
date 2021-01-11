@@ -669,6 +669,7 @@ function genChildren( el,state,checkSkip,altGenElement,altGenNode ){
                 normalizationType
             )
         }
+        //
         let normalizationType$1 = checkSkip
             ? genNormalizationType(children,state.maybeComponent)
             : 0

@@ -65,6 +65,7 @@ export function mountComponent( vm,el,hydrating ){
         at mountComponent (lifecycle:61)
         at Vue.$mount (runtime:14)
      */
+
     new Watcher(vm, updateComponent, noop, {
         before(){
             console.log('什么时候来这')
@@ -144,7 +145,6 @@ export function callHook( vm,hook ){
 
     popTarget()
 }
-
 
 export function lifecycleMixin( Vue ){
 

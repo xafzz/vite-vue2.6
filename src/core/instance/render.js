@@ -24,7 +24,8 @@ export function initRender( vm ){
 
     // $createElement方法的主要作用是解析用户写的模板html，从而成为浏览器可以识别的格式。
     // 将 createElement 方法绑定到这个实例，这样我们就可以在其中得到适当的 render context。
-    // todo createElement() 方法的最后一个参数 是来判断是 开发者是否在调用vue的时候 使用了 render 函数
+    // createElement() 方法的最后一个参数 是来判断是 开发者是否在调用vue的时候 使用了 render 函数
+    // todo false 这2种模式有什么不一样
     vm._c = (a,b,c,d) => createElement(vm,a,b,c,d,false)
     // normalization is always applied for the public version, used in
     // user-written render functions.
@@ -90,7 +91,6 @@ export function renderMixin( Vue ){
             currentRenderingInstance = vm
             //vm._renderProxy 检查 render 函数里面的各个函数 比如 _c _v _m
             vnode = render.call(vm._renderProxy,vm.$createElement)
-
         }catch (e) {
             console.error('有错误:',e)
         }
