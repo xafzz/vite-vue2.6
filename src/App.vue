@@ -14,9 +14,9 @@
         <div class="v-once" v-once >
             v-once
         </div>
-        <div class="v-once" v-once >
-            v-once
-        </div>
+        <h1>
+
+        </h1>
         <div class="bottom">
             <a href="/" target="_blank" :title="msg" id="link" class="link" :class="cla" name="a">第三方的身份</a>
         </div>

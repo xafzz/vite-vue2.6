@@ -14,6 +14,10 @@ export function isDef(v){
     return v !== undefined && v !== null
 }
 
+export function isTrue (v) {
+    return v === true
+}
+
 /**
  * Check if val is a valid array index.
  */
