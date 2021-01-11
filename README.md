@@ -1,5 +1,6 @@
-# _render-runtime-mount
-###### 未完成
+
+======================  提交分隔符  ======================
+## _render-runtime-mount
 
     文件：src/core/instance/render.js
     renderMixin 函数里面的 Vue.prototype._render
@@ -9,7 +10,7 @@
 ### 问题
 
 #### 1、vm._renderProxy
-    
+
     文件：src/core/instance/proxy.js
     当初在写 initProxy 时候 不明白 hasHandler 这个要在什么时候使用以及他的作用
     作用：
@@ -24,18 +25,23 @@
             return this._data
         }
     拿到 _data 
-    
+
 
 #### 2、vm.$createElement
-    
+
     文件：src/core/instance/proxy.js
     在 initRender， vm.$createElement = (a,b,c,d) => createElement(vm, a, b, c, d, true)
     执行 createElement 函数
 
 #### 3、_v、_m is not defined
-        
+
     为什么报这个错？
     这个是从 renderMixin 里面 installRenderHelpers 报错出来的
     当时候写的时候 installRenderHelpers 这个函数也不知道有什么用
 
-    
+======================  提交分隔符  ======================
+## mountComponent-runtime-mount
+
+    文件：src/core/instance/lifecycle.js
+    let vnode = vm._render() 是 undefined
+    需要到 src/core/instance/render.js 完善 _render() 函数
