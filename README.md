@@ -7,6 +7,9 @@
     文件：src/core/vdom/create-element.js 里面的 _createElement
 
 ### normalizeChildren
+
+    文件：src/core/vdom/helpers/normalize-children.js
+
 ###### 我们生成的js，DOM是按照dom的结构形式表现出来的
 ###### 这块需要先完成后面的代码，return过一个vnode以后才行，要不然全是undefined
     1、将结构打平，通过递归的方式
