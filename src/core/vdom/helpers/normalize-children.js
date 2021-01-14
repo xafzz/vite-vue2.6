@@ -82,7 +82,11 @@ function normalizeArrayChildren( children,nestedIndex ){
         c = children[i]
 
         if( isUndef(c) || typeof c === 'boolean' ){
-            console.log('让我看看这时候c是什么样子的',c)
+            //存在有节点 但是 没有任何返回的情况下就是走这儿
+            //在 src/core/instance/render-helpers/render-static.js 时候 无意将所以代码删了 结果这爆出来了
+            //在 静态节点 没有任何返回的时候 是一个空的 undefined
+            // console.log('让我看看这时候c是什么样子的',c)
+            // c 是 undefined
             continue
         }
         // -1
@@ -111,7 +115,11 @@ function normalizeArrayChildren( children,nestedIndex ){
         }else{                          //其他情况 object
             if (isTextNode(c) && isTextNode(last)) {
                 //继续合并相邻的文本节点
-                console.log('没有进来')
+                //在 src/core/instance/render-helpers/render-static.js 时候 无意将所以代码删了 结果这爆出来了
+                //在 静态节点 没有任何返回的时候 c是undefined
+                //没有开启压缩模式 换行也是空的 所以这儿要合并下
+                //但是 我在开启了 compile 压缩模式的 不存在2个相同的空vnode 没有走这儿
+                res[lastIndex] = createTextVNode(last.text + c.text)
             }else{
                 // 嵌套数组子级的默认键（可能由v-for生成）
                 // /src/core/instance/render-helpers/render-list.js
