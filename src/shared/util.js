@@ -39,6 +39,15 @@ export function isPrimitive (value){
     )
 }
 
+export function isFalse (v) {
+    return v === false
+}
+
+/**
+ * Return the same value.
+ */
+export const identity = (_) => _
+
 //附录/shared/util.js 文件工具方法全解
 //http://caibaojian.com/vue-design/appendix/shared-util.html
 /**
@@ -184,7 +193,6 @@ function toNumber (val) {
     const n = parseFloat(val)
     return isNaN(n) ? val : n
 }
-
 
 export {
     no,

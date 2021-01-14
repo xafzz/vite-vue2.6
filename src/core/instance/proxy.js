@@ -56,15 +56,19 @@ let initProxy
     }
 
     //应用场景在于查看vm实例是否拥有某个属性
-    //比如调用for in循环遍历vm实例属性时，会触发hasHandler方法。
-    // 生成的 render 函数里面 有 _v _c _m等 这就是检查 vm 上是否已经有了这些函数
+    // 1、比如调用for in循环遍历vm实例属性时，会触发hasHandler方法。
+    // 2、生成的 render 函数里面 有 _v _c _m等 这就是检查 vm 上是否已经有了这些函数
+    //handler.has()  in 操作符的捕捉器
+    //https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/has
     let hasHandler = {
         has( target,key ){
-            // key  _v _c _m
+            // key  _v _c _m 是怎么来的 是 render函数里面的
+            // console.log(target,key)
             const has = key in target
             // allowedGlobals最终存储的是一个代表特殊属性名称的映射表
             const isAllowed = allowedGlobals(key) || ( typeof key === 'string' && key.charAt(0) === '_' && !(key in target.$data) )
             if( !has && !isAllowed ){
+                console.log(target.$data)
                 if (key in target.$data){
                     warnReservedPrefix(target, key)
                 }else{
@@ -78,6 +82,8 @@ let initProxy
     // 针对读取代理对象的某个属性时进行的操作
     // 当访问的属性不是string类型或者属性值在被代理的对象上不存在，则抛出错误提示，否则就返回该属性值。
     // 该方法可以在开发者错误的调用vm属性时，提供提示作用。
+    // 获取的时候 打印了这个
+    // handler.get() 属性读取操作的捕捉器。
     let getHandler = {
         get( target,key ){
             console.log('什么时候可以打印下呢')
@@ -101,7 +107,9 @@ let initProxy
             let handlers = options.render && options.render._withStripped
                 ? getHandler
                 : hasHandler
-
+            /*
+                Proxy 代理 访问对象前添加了一层拦截
+             */
             vm._renderProxy = new Proxy(vm,handlers)
         }else{
             console.log('什么时候不支持proxy')

@@ -325,3 +325,15 @@ function normalizeDirectives( options ){
         console.log('也没有这个')
     }
 }
+
+
+/**
+ * 官方解释
+ * Resolve an asset.
+ * This function is used because child instances need access
+ * to assets defined in its ancestor chain.
+ */
+export function resolveAsset(options,type,id){
+
+    console.log('嘿嘿 第一次的时候 果然写错了，怎么怎么可能会进来的呢')
+}

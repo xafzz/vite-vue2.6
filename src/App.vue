@@ -8,15 +8,15 @@
             </div>
         </div>
         <!-- 这是一段注释 -->
-        <div class="center" v-for="(item,key) in 10" :key="key">
+        <div class="center" v-for="(item,key) in 10" >
             <p>{{ msg }},{{ changeComputed }},{{computedParams(2)}},item:{{item}},key:{{key}}</p>
         </div>
         <div class="v-once" v-once >
             v-once
         </div>
-        <h1>
-
-        </h1>
+        <div>
+            v-once1
+        </div>
         <div class="bottom">
             <a href="/" target="_blank" :title="msg" id="link" class="link" :class="cla" name="a">第三方的身份</a>
         </div>

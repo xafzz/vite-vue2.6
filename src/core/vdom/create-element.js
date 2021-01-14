@@ -1,5 +1,9 @@
 
-import {isPrimitive, isTrue} from "../util";
+import config from "../config";
+import {isDef, isPrimitive, isTrue, resolveAsset,isObject} from "../util";
+import {createEmptyVNode, VNode} from "./vnode";
+import {getTagNamespace, isReservedTag} from "../../util";
+import {normalizeChildren} from "./helpers/normalize-children";
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
@@ -107,6 +111,7 @@ import {isPrimitive, isTrue} from "../util";
         //判断条件如下
         if( needsNormalization(el) || ( el.ifConditions && el.ifConditions.some(c=>{ needsNormalization(c.block) }) ) )
             needsNormalization 函数中 return el.for !== undefined || el.tag === 'template' || el.tag === 'slot'
+        在 src/core/vdom/helpers/normalize-children.js 有一段很长的注释说明 解释了为什么要设置成2
 
     false alwaysNormalize
  */
@@ -117,7 +122,7 @@ import {isPrimitive, isTrue} from "../util";
  * @param data { ? 标签的属性,{} } 拿 a 来说 attrs:{href: "/",id: "link",name: "a",target: "_blank"},class: "class",staticClass: "link"
  * @param children { 是否有子节点,Array }
  * @param normalizationType
- * @param alwaysNormalize
+ * @param alwaysNormalize { boolean }
  */
 export function createElement(
     context,
@@ -151,7 +156,134 @@ export function createElement(
 const SIMPLE_NORMALIZE = 1
 const ALWAYS_NORMALIZE = 2
 
+/**
+ * 这个才是 _c createElement 实际执行的函数
+ * @param context { Vue }
+ * @param tag { ?标签|string|class|function|object  } 这个也能为空什么情况下？
+ * @param data { 标签属性|undefined }
+ * @param children { 子节点｜undefined }
+ * @param normalizationType { number|undefined }
+ * @private
+ */
+export function _createElement(
+    context,
+    tag,
+    data,
+    children,
+    normalizationType
+){
+    //判断数据是否是响应式数据
+    // isDef  v !== undefined && v !== null
+    // 在 observe 里面 响应式数据的依据是 __ob__
+    if( isDef(data) && isDef(data.__ob__)){
+        console.warn(`避免将观察到的数据对象用作vnode数据：${JSON.stringify(data)}，始终在每个渲染中创建新的vnode数据对象！`)
+        //创建一个新的
+        return createEmptyVNode()
+    }
 
-export function _createElement(){
-    // console.log(11)
+    //是否是 动态组件 用is判断
+    if( isDef(data) && isDef(data.is) ){
+        //什么意思呢
+        // tag = data.is
+        console.log('compile没有涉及到组件，暂时看不了is')
+    }
+
+    if( !tag ){
+        // in case of component :is set to falsy value
+        console.log('注释是:is 但是这块没用编译')
+    }
+
+    //isPrimitive 判断key的类型 不是 string number symbol boolean
+    /*
+        list:[{name:1,age:2}]
+        <div class="center" v-for="(item,key) in list" :key="item">
+     */
+    if( isDef(data) && isDef(data.key) && !isPrimitive(data.key) ){
+        // todo @binding ?
+        if( !('@binding' in data.key) ){
+            console.warn(`避免使用非原始值(${JSON.stringify(data.key)})作为键，而使用string/number类型`)
+        }
+    }
+
+    // support single function children as default scoped slot
+    if( Array.isArray(children) && typeof children[0] === 'function' ){
+        //children 是是一个数组 或者 undefined
+        console.log('没有碰到这种情况typeof children[0] 是 function')
+    }
+
+    //在目前这种情况下 最外层是 2  是因为 里面 有for的原因或者在上面可以找到
+    if( normalizationType === ALWAYS_NORMALIZE ){ //标准模式
+        //先放一下
+        //进去全都是些undefined
+        //return vnode 以后 这就可以来补上了
+        //将 vnode 打平 并 检测 v-for 上是否有 key 没有key的话系统给他搞上一个
+        children = normalizeChildren(children)
+    }else if(normalizationType === SIMPLE_NORMALIZE ){ //简单模式
+        console.log('简单模式 没有进来啊')
+    }
+    let vnode,ns
+    //判断标签
+    if( typeof tag === 'string' ){
+        let Ctor
+        //todo 不晓得为什么不行
+        //config.getTagNamespace 现在应该是 /src/util/element.js 里面的 getTagNamespace ，但是我没有变过来
+        //undefined
+        ns = (context.$vnode && context.$vnode.ns) || getTagNamespace(tag)
+        if( config.isReservedTag(tag) === isReservedTag(tag) ){
+            console.warn(`isReservedTag跟config.isReservedTag相同了怎么做到的？`)
+        }
+        //检测是不是常用的html标签
+        if( isReservedTag(tag) ){
+            //平台内置元素
+            if( isDef(data) && isDef(data.nativeOn) ){
+                console.warn(`v-on的.native修饰符仅在组件上有效，但已在<${tag}>上使用`)
+            }
+            //为我们的html标签创建 vnode
+            vnode = new VNode(
+                //返回相同的标签
+                config.parsePlatformTagName(tag),data,children,
+                undefined,undefined,context
+            )
+        }else if((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options,'components',tag) )){
+            console.log('没有写components')
+        }else{
+            // unknown or unlisted namespaced elements
+            // check at runtime because it may get assigned a namespace when its
+            // parent normalizes children
+            console.log('生成vnode')
+        }
+    }else{
+        console.log('tag类型不是string也挺好奇的,tag=',JSON.stringify(tag))
+    }
+
+    //结个尾 将 vnode 返回
+    if( Array.isArray(vnode) ){
+        console.log('vnode是一个数组,',vnode)
+    }else if( isDef(vnode) ){
+
+        if( isDef(ns) ){
+            console.log('ns不为空了,',ns)
+        }
+        //data 有没有值 上面注释 也说明了
+        if( isDef(data) ){
+            //用到了 :class :style 需要深层渲染
+            registerDeepBindings(data)
+        }
+
+        return vnode
+    }else{
+        console.log('vnode是空啊')
+    }
+}
+
+
+// necessary to ensure parent re-render when deep bindings like :style and
+// :class are used on slot nodes
+function registerDeepBindings(data){
+    if (isObject(data.style)) {
+        console.log(':style用到了快来补上吧')
+    }
+    if (isObject(data.class)) {
+        console.log(':class用到了快来补上吧')
+    }
 }

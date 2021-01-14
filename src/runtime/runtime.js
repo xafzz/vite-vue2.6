@@ -1,8 +1,12 @@
 
 import Vue from "../core/core";
-import {query} from "../util/index";
+import {getTagNamespace, isReservedTag, query} from "../util";
 import { inBrowser } from '../core/util'
 import { mountComponent } from '../core/instance/lifecycle'
+
+// todo 在 替换 config 里面的，但是没有替换的了 好尴尬
+Vue.config.getTagNamespace = getTagNamespace
+Vue.config.isReservedTag = isReservedTag
 
 //这个过程更像是挂载的过程
 //后期在写吧
@@ -13,5 +17,6 @@ Vue.prototype.$mount = function(el,hydrating){
 
     return mountComponent(this,el,hydrating)
 }
+
 
 export default Vue

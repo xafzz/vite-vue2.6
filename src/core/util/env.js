@@ -14,6 +14,10 @@ export function isNative (Ctor) {
     return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
 }
 
+
+// detect devtools
+export const devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__
+
 // this needs to be lazy-evaled because vue may be required before
 // vue-server-renderer can set VUE_ENV
 //因为之前可能需要vue，所以需要延迟评估

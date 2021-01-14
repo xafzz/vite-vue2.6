@@ -35,7 +35,6 @@ export const isPreTag = (tag) => tag === 'pre'
 
 
 export const getTagNamespace = (tag) =>{
-
     if( isSVG(tag) ){
         return 'svg'
     }

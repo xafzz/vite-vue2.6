@@ -1,5 +1,5 @@
 
-import { no } from "../shared/util.js";
+import {identity, no, noop} from "../shared/util.js";
 
 export default {
 
@@ -22,6 +22,11 @@ export default {
      */
     isReservedTag: no,
     /**
+     * Parse the real tag name for the specific platform.
+     */
+    //identity 返回相同的值
+    parsePlatformTagName: identity,
+    /**
      * Perform updates asynchronously. Intended to be used by Vue Test Utils
      * This will significantly reduce performance if set to false.
      */
@@ -41,4 +46,21 @@ export default {
      */
     // $flow-disable-line
     keyCodes: Object.create(null),
+
+    /**
+     * Get the namespace of an element
+     */
+    getTagNamespace: noop,
+
+
+    /**
+     * Whether to enable devtools
+     */
+    devtools: true,
+
+    /**
+     *
+     * Show production mode tip message on boot?
+     */
+    productionTip:true,
 }

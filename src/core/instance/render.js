@@ -89,7 +89,8 @@ export function renderMixin( Vue ){
             // 修补父组件时，将调用嵌套组件的渲染fns。
             // 当前渲染的组件实例 就是 他自己
             currentRenderingInstance = vm
-            //vm._renderProxy 检查 render 函数里面的各个函数 比如 _c _v _m
+
+            // TODO 不明白具体怎么运作的
             vnode = render.call(vm._renderProxy,vm.$createElement)
         }catch (e) {
             console.error('有错误:',e)

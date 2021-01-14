@@ -26,7 +26,7 @@ export function renderStatic(index,isInFor){
     )
     //todo 有tree 的时候 在来看看
     if( tree ){
-        console.log(tree)
+        console.log('tree--->',tree)
         markStatic(tree,`__static__${index}`,false)
     }
     return tree
