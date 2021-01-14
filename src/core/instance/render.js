@@ -5,6 +5,7 @@ import {createElement} from "../vdom/create-element";
 import {defineReactive} from "../observer/observe";
 import {isUpdatingChildComponent} from "./lifecycle";
 import {installRenderHelpers} from "./render-helpers";
+import {createEmptyVNode, VNode} from "../vdom/vnode";
 
 
 export function initRender( vm ){
@@ -94,6 +95,36 @@ export function renderMixin( Vue ){
             vnode = render.call(vm._renderProxy,vm.$createElement)
         }catch (e) {
             console.error('有错误:',e)
+        }finally {
+            //感情这是用完了就扔掉被
+            currentRenderingInstance = null
         }
+
+        // if the returned array contains only a single node, allow it
+        // return 只包含一个 节点
+        if( Array.isArray(vnode) && vnode.length === 1 ){
+            console.log('首先也的是一个数组啊,你到底啥时候是个数组,',vnode)
+        }
+
+        // return empty vnode in case the render function errored out
+        // 关于 instanceof
+        // src/core/instance/instance.js 在里面查看吧
+        if( !(vnode instanceof VNode) ){
+            if( Array.isArray(vnode)) {
+                console.warn(
+                    'Multiple root nodes returned from render function. Render function ' +
+                    'should return a single root node.'
+                )
+            }
+            vnode = createEmptyVNode()
+        }
+        // set parent
+        // 难道要父子组件 才会有值？
+        // undefined
+        if( _parentVnode ){
+            console.log('_parentVnode有值了，',_parentVnode)
+        }
+        vnode.parent = _parentVnode
+        return vnode
     }
 }
