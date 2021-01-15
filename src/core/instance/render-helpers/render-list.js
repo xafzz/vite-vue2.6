@@ -30,8 +30,8 @@ export function renderList(val, render){
         for (i = 0; i < val ; i++) {
             ret[i] = render(i+1,i)
         }
-        //todo ret 怎么是 undefined
-        // console.log(ret)
+        //ret 怎么是 undefined
+        // 需要完成 _createElement return vnode 就有值了
     }else if( isObject(val) ){  // object
         console.log('没有写')
 
