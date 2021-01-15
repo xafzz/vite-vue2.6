@@ -3,13 +3,14 @@ import Vue from "../core/core";
 import {getTagNamespace, isReservedTag, query} from "../util";
 import {inBrowser, noop} from '../core/util'
 import { mountComponent } from '../core/instance/lifecycle'
+import {patch} from "./patch";
 
 // todo 在 替换 config 里面的，但是没有替换的了 好尴尬
 Vue.config.getTagNamespace = getTagNamespace
 Vue.config.isReservedTag = isReservedTag
 
 // install platform patch function
-Vue.prototype.__patch__ = inBrowser ? noop : noop
+Vue.prototype.__patch__ = inBrowser ? patch : noop
 //这个过程更像是挂载的过程
 //后期在写吧
 // public mount method

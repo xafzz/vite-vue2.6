@@ -212,7 +212,9 @@ export function lifecycleMixin( Vue ){
         if( !prevVnode ){
             //初始渲染 难道在 update 的时候 prevVnode 就有值了吗
             // vm.$el #app 的 html 内容
+            console.warn('老DOM------>',vm.$el)
             vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
+            console.warn('新DOM------>',vm.$el)
         }else{
             // 如果更新的时候 还是走这儿，这样的话 vm._node 是必定有值的
             // 因为刚在上面 将 vm._vnode 赋值了
