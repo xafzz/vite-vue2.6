@@ -9,9 +9,9 @@ export let isUpdatingChildComponent = false
 
 /**
  *
- * @param vm { Vue }
- * @param el { #app节点内容 }
- * @param hydrating { 默认false，猜测跟ssr有关 }
+ * @param vm { any|Vue }
+ * @param el { any|#app节点内容 }
+ * @param hydrating { boolean|默认false，猜测跟ssr有关 }
  */
 export function mountComponent( vm,el,hydrating ){
 
@@ -52,7 +52,6 @@ export function mountComponent( vm,el,hydrating ){
             mark(endTag)
             measure(`vue ->${name}<- patch`,startTag,endTag)
 
-
         }
     }else{
         updateComponent = () => {
@@ -60,6 +59,7 @@ export function mountComponent( vm,el,hydrating ){
             // vm._update(vm._render(),hydrating)
         }
     }
+
 
     // 我们将其设置为观察者的构造函数中的vm._watcher，
     // 因为观察者的初始补丁可能会调用forceUpdate（例如，在子组件的已挂接钩子内部），
@@ -78,12 +78,37 @@ export function mountComponent( vm,el,hydrating ){
         at mountComponent (lifecycle:61)
         at Vue.$mount (runtime:14)
      */
-    console.log(updateComponent())
-    // new Watcher(vm, updateComponent, noop, {
-    //     before(){
-    //         console.log('什么时候来这')
-    //     }
-    // }, true /* isRenderWatcher */)
+    //todo 完善 patch 再来看这块
+    new Watcher(vm, updateComponent, noop, {
+        before(){
+            console.log('什么时候来这')
+        }
+    }, true /* isRenderWatcher */)
+
+    //重置成？ false
+    hydrating = false
+
+    // manually mounted instance, call mounted on self
+    // mounted is called for render-created child components in its inserted hook
+    // 手动安装的实例，调用安装在自安装实例上的调用会在其插入的挂钩中调用渲染创建的子组件
+    /*
+        vm.$vnode
+        1、最开始在 src/core/instance/render.js initRender 函数中
+        const parentVnode = vm.$vnode = options._parentVnode 被设置
+        描述是 父树中的占位符节点 当时是 undefined
+        2、Vue.prototype._render 在 重新取了 _parentVnode 当时也是 undefined
+     */
+    // todo 如果 vm.$vnode 不为空 就不走 mounted 了吗？
+
+    if( vm.$vnode == null ){
+        vm._isMounted = true
+        callHook(vm,'mounted')
+    }else{
+        //vm.$vnode 有值了
+        console.log('vm.$vnode我现在有值了，难道就不走mounted了吗',vm)
+    }
+
+    return vm
 }
 
 export function initLifecycle( vm ){
