@@ -2,6 +2,7 @@
 import { isDef, isTrue, isUndef} from "../../shared/util";
 import {isTextInputType} from "../../web/util";
 import {SSR_ATTR} from "../../shared/constants";
+import {VNode} from "./vnode";
 
 
 /**
@@ -67,6 +68,26 @@ function sameInputType(oVal,nVal){
 export function createPatchFunction(backend){
     //看执行的顺序 应该先写这块
     //还是用到在写吧 印象深
+    let i,j
+    const cbs = {}
+
+    const { nodeOps } = backend
+
+    /**
+     * 用当前元素的 创建一个空的vnode，
+     * @param elm
+     * @returns {VNode}
+     */
+    function emptyNodeAt(elm){
+
+        return new VNode(
+            nodeOps.tagName(elm).toLowerCase(), //所以要小写下
+            {},
+            [],
+            undefined,
+            elm //存放的是当前的元素
+        )
+    }
 
     /**
      * @description 没有生成新vnode,只能用老的顶顶了 <br/>
@@ -88,9 +109,9 @@ export function createPatchFunction(backend){
         }
     }
 
-    function emptyNodeAt(elm){
 
-        console.log(elm,typeof elm)
+    function createElm(){
+        console.log(11)
     }
 
     /**
@@ -171,9 +192,18 @@ export function createPatchFunction(backend){
                     // either not server-rendered, or hydration failed.
                     // create an empty node and replace it
                     // oldVnode #app
+                    // 用当前元素创建一个空的vnode
                     oldVnode = emptyNodeAt(oldVnode)
-
                 }
+
+                // replacing existing element
+                // 不知道要干什么用
+                // 这是之前 html 里面的 元素
+                const oldElm = oldVnode.elm
+                // 获取父级
+                const parentElm = nodeOps.parentNode(oldElm)
+
+                createElm()
             }
 
         }
