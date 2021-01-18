@@ -7,7 +7,7 @@ export function createPatchFunction(backend){
     console.log(1)
 
     //就是你喽
-    return function path(){
+    return function patch(){
 
         console.log(2)
 
