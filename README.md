@@ -12,7 +12,7 @@
 
 ### isRealElement
 ###### 初次渲染时为真，有nodeType
-    
+
     nodeType 
         https://www.runoob.com/jsref/prop-node-nodetype.html
 
@@ -57,3 +57,15 @@
             this.asyncFactory = asyncFactory
             // 是否为异步占位
             this.isAsyncPlaceholder = false
+
+======================  18.2  ======================
+
+## emptyNodeAt
+
+    初次渲染的时候，oldVnode 是html结构，拿到当前元素创建一个空的vnode
+
+### 问题
+#### parentElm
+
+    获取父级不知道要干什么
+
