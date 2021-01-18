@@ -1,5 +1,5 @@
 import {makeMap} from "../helpers.js";
-import {isNonPhrasingTag} from "../../util/index.js";
+import {isNonPhrasingTag} from "../../web/util/index.js";
 import {no} from "../../shared/util.js";
 
 // to avoid being passed as HTML comment when inlined in page

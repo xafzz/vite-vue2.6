@@ -1,6 +1,6 @@
 import {
     makeMap
-} from "../compiler/helpers.js";
+} from "../../compiler/helpers.js";
 
 
 
@@ -66,3 +66,5 @@ export const isNonPhrasingTag = makeMap(
     'optgroup,option,param,rp,rt,source,style,summary,tbody,td,tfoot,th,thead,' +
     'title,tr,track'
 )
+
+export const isTextInputType = makeMap('text,number,password,search,email,tel,url')

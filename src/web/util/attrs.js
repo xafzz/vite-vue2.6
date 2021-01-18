@@ -1,6 +1,6 @@
 import {
     makeMap
-} from "../compiler/helpers.js";
+} from "../../compiler/helpers.js";
 
 // attributes that should be using props for binding
 let acceptValue=makeMap('input,textarea,option,select,progress')

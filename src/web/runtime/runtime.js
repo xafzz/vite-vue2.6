@@ -1,8 +1,8 @@
 
-import Vue from "../core/core";
+import Vue from "../../core/core";
 import {getTagNamespace, isReservedTag, query} from "../util";
-import {inBrowser, noop} from '../core/util'
-import { mountComponent } from '../core/instance/lifecycle'
+import {inBrowser, noop} from '../../core/util'
+import { mountComponent } from '../../core/instance/lifecycle'
 import {patch} from "./patch";
 
 // todo 在 替换 config 里面的，但是没有替换的了 好尴尬

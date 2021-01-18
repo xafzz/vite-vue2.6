@@ -1,4 +1,4 @@
-import {cached} from "../compiler/helpers.js";
+import {cached} from "../../compiler/helpers.js";
 
 //将 style行内样式 用 {} 包裹起来
 export const parseStyleText = cached( cssText => {

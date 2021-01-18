@@ -2,7 +2,7 @@
 import config from "../config";
 import {isDef, isPrimitive, isTrue, resolveAsset,isObject} from "../util";
 import {createEmptyVNode, VNode} from "./vnode";
-import {getTagNamespace, isReservedTag} from "../../util";
+import {getTagNamespace, isReservedTag} from "../../web/util";
 import {normalizeChildren} from "./helpers/normalize-children";
 
 // wrapper function for providing a more flexible interface

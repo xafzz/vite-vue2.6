@@ -1,6 +1,6 @@
 import {getAndRemoveAttr, getBindingAttr} from "../helpers.js";
 import parseText from "../parse/parseTEXT.js";
-import { parseStyleText } from '../../util/style.js'
+import { parseStyleText } from '../../web/util/style.js'
 
 //将style :style挂载到el上面
 function transformNode ( el,options ){
