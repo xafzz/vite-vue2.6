@@ -63,4 +63,14 @@ export default {
      * Show production mode tip message on boot?
      */
     productionTip:true,
+    /**
+     * Ignore certain custom elements
+     */
+    ignoredElements: [],
+
+    /**
+     * Check if a tag is an unknown element.
+     * Platform-dependent.
+     */
+    isUnknownElement: no
 }

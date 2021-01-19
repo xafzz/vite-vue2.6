@@ -194,6 +194,10 @@ function toNumber (val) {
     return isNaN(n) ? val : n
 }
 
+export function isRegExp (v) {
+    return _toString.call(v) === '[object RegExp]'
+}
+
 export {
     no,
     noop,

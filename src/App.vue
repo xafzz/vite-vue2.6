@@ -1,7 +1,7 @@
 <template>
     <div id="main" title="1" class="main" style="background: red;border: 1px solid red;" >
         <div class="top">
-            这是一段正常的文字br
+            这是一段正常的文字br11
             <div class="btn">
                 <input type="text" id="input" class="input" name="input" value="这是默认值" v-if="1" v-on:click="tag"  v-model="msg" />
                 <button  @click="tag" > 点击 </button>
@@ -12,11 +12,11 @@
             <p>{{ msg }},{{ changeComputed }},{{computedParams(2)}},item:{{item}},key:{{key}}</p>
         </div>
         <div class="v-once" v-once >
-            v-once
+            v-once11111111
         </div>
-        <div>
+        <h1>
             v-once1
-        </div>
+        </h1>
         <div class="bottom">
             <a href="/" target="_blank" :title="msg" id="link" class="link" :class="cla" name="a">第三方的身份</a>
         </div>
@@ -39,11 +39,11 @@ export default {
         }
     },
     beforeCreate () {
-        document.querySelector('#app').append('----- beforeCreate -----')
+        // document.querySelector('#app').append('----- beforeCreate -----')
         console.log('beforeCreate')
     },
     created() {
-        document.querySelector('#app').append('----- created -----')
+        // document.querySelector('#app').append('----- created -----')
         console.log('created')
     },
     beforeMount() {

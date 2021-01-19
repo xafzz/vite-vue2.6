@@ -192,7 +192,7 @@ export function lifecycleMixin( Vue ){
      * @param hydrating { ? boolean }
      * @private
      */
-    Vue.prototype._update = function (vnode,hydrating){
+     Vue.prototype._update = function (vnode,hydrating){
         let vm = this;
 
         // 对呀 取名 prev 不就是 上一个吗 在进来的时候 肯定还走到了这儿
