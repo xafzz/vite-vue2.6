@@ -1,75 +1,17 @@
-# patch
+# vite-vue2.6
 
-    patch 阶段    
+## 第一版搞定，成功渲染到页面上
+    
+    虽然没有到#app内
+    虽然没有写完
+    虽然还有很多遗留问题
+    但是渲染到页面上了
 
-======================  18.1  ======================
-## patch-patch
-###### 详细注释可以在代码中查看
-###### 相应目录修改
+# yarn
 
-    文件：src/core/vdom/patch.js
-    在 createPatchFunction 函数中 return patch()
-
-### isRealElement
-###### 初次渲染时为真，有nodeType
-
-    nodeType 
-        https://www.runoob.com/jsref/prop-node-nodetype.html
-
-
-### sameVnode
-###### 当oldVnode跟vnode都是 vnode 时或者 在 update 的时候
-
-    1、input：
-
-        1)、data 
-
-            {
-                attrs: {type: "text", id: "input", name: "input", value: "这是默认值"}
-                model: {value: 1, expression: "msg", callback: ƒ}
-                on: {click: ƒ}
-            }
-
-        2)、attrs
-
-            {type: "text", id: "input", name: "input", value: "这是默认值"}
-
-        3)、type
-
-            makeMap('text,number,password,search,email,tel,url')
-
-    2、非 input：
-        1)、key 常见在 v-for 时，没有时 undefined
-        2)、tag 标签名字
-        3)、isComment
-        4)、data 
-            
-            {
-                attrs: {id: "main", title: "1"}
-                staticClass: "main"
-            }
-
-        5)、isAsyncPlaceholder、asyncFactory
-
-            这块都在 VNode 类中
-            // async component factory function
-            //异步工厂方法
-            this.asyncFactory = asyncFactory
-            // 是否为异步占位
-            this.isAsyncPlaceholder = false
-
-======================  18.2  ======================
-
-## emptyNodeAt
-
-    初次渲染的时候，oldVnode 是html结构，拿到当前元素创建一个空的vnode
-
-### 问题
-#### parentElm
-
-    获取父级不知道要干什么
-
-======================  18.2  ======================
-
-## createElm
->核心函数，需要重写一遍patch过程
+```
+yarn install
+```
+```
+yarn dev
+```
