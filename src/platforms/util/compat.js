@@ -1,5 +1,5 @@
 
-import {inBrowser} from "../core/util/index.js";
+import {inBrowser} from "../../core/util";
 
 
 // check whether current browser encodes a char inside attribute values

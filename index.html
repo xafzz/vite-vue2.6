@@ -8,22 +8,23 @@
         div{display: flex;flex-direction: column;}
         #app{width: 100%;height: 100%;align-items: center;justify-content: center;}
     </style>
+
+   <script src="/socket.io/socket.io.js"></script>
+   <script>
+       var socket = io('ws://localhost:9000');
+       socket.on('pageChange', function (data) {
+           if(data && data.server){
+               window.location.reload()
+               //向服务器发送通知 客户端处理了相应
+               socket.emit('client', {
+                   server:false,
+                   client:true
+               });
+           }
+       });
+   </script>
 </head>
 <body>
     <div id="app">还是放上点东西初始化好看点</div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        var socket = io('ws://localhost:9000');
-        socket.on('pageChange', function (data) {
-            if(data && data.server){
-                window.location.reload()
-                //向服务器发送通知 客户端处理了相应
-                socket.emit('client', {
-                    server:false,
-                    client:true
-                });
-            }
-        });
-    </script>
 </body>
 </html>

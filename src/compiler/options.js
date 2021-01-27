@@ -7,7 +7,7 @@ import {
     getTagNamespace,
     isUnaryTag,
     canBeLeftOpenTag,
-} from '../util/index.js'
+} from '../platforms/util/index.js'
 //generate的时候用到这儿了 尤其是在
 //generate() -> genElement() -> genData() -> genDirectives()
 import directives from './directives/index.js'

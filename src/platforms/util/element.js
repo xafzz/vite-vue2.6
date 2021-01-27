@@ -1,6 +1,6 @@
 import {
     makeMap
-} from "../compiler/helpers.js";
+} from "../../compiler/helpers.js";
 
 
 

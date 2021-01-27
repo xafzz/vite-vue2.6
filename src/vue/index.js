@@ -1,13 +1,13 @@
 
 
-import Vue from '@/runtime/runtime'
+import Vue from '@/platforms/runtime/runtime'
 import {compileToFunctions} from '@/compiler/compile'
-import {query} from '@/util'
+import {query} from '@/platforms/util'
 import config from '@/core/config'
 //性能  怎么看 ？
 //在浏览器控制台中 window.performance.getEntries() 参数详见 README.md
 import {mark,measure} from '../core/util/perf'
-import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from '../util/compat'
+import {shouldDecodeNewlines,shouldDecodeNewlinesForHref} from '../platforms/util/compat'
 
 //指向 runtime/runtime.js 里面的 Vue.prototype.$mount
 const mount = Vue.prototype.$mount

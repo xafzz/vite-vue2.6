@@ -138,6 +138,10 @@ function isPlainObject(obj){
     return _toString.call(obj) === '[object Object]'
 }
 
+function isRegExp (v) {
+    return _toString.call(v) === '[object RegExp]'
+}
+
 /**
  * Quick object check - this is primarily used to tell
  * Objects from primitive values when we know the value
@@ -194,6 +198,7 @@ function toNumber (val) {
     return isNaN(n) ? val : n
 }
 
+
 export {
     no,
     noop,
@@ -207,5 +212,6 @@ export {
     remove,
     toArray,
     toString,
-    toNumber
+    toNumber,
+    isRegExp
 }
